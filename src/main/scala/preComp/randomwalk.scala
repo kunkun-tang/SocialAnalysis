@@ -14,6 +14,6 @@ object RWM{
    */
   def apply(frdsMap: Map[Int, ArrayBuffer[Int]], backBone: List[Int])(source: Int) = {
   
-    val random_index = rand.nextInt(frdsMap(source))
+    //val random_index = rand.nextInt(frdsMap(source))
   }
 }
