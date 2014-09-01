@@ -65,10 +65,12 @@ object PageRankWalk{
         first + elem._2
       })
       val p2 = pairs.map{ case (first: Int, second: Int) =>(first, second.toDouble/totalDegree)}
+      // die is a discrete prob distribution based on our algorithm
       val die = discrete(p2: _*)
 
       /*
-       * More samples make the distribution stable.
+       * die.sample is to sample a random variable from random distribution die.
+       * 100 samples make the distribution stable.
        */
       source = frds(die.sample(100)(99))
       localGraph += source
