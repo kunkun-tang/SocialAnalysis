@@ -1,11 +1,24 @@
 package execute
+
+import com.typesafe.config.ConfigFactory
 import preComp._
 
 /*
  * SocialAnalysis Main function.
  */
 object socialApp extends App{
+
+  val conf = ConfigFactory.load
   val (frdsMap, backBone) = PreMain("DBLP")
-  PageRankWalk(frdsMap, backBone)(36488)
-  //Prob()
+
+  val src1 = conf.getInt("DBLP.src1")
+  val src2 = conf.getInt("DBLP.src2")
+
+  val localGraph = PageRankWalk(frdsMap, backBone)(src1)
+  val localGraph2 = PageRankWalk(frdsMap, backBone)(src2)
+
+  val inferSet = localGraph ++ localGraph2 ++ backBone
+  println("inferSet size = "+inferSet.size)
+  
+  
 }
