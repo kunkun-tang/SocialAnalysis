@@ -6,6 +6,6 @@ import preComp._
  */
 object socialApp extends App{
   val (frdsMap, backBone) = PreMain("DBLP")
-  RWM(frdsMap, backBone)(100)
-  Prob()
+  PageRankWalk(frdsMap, backBone)(36488)
+  //Prob()
 }

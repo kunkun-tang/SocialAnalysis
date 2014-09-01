@@ -27,6 +27,6 @@ object Prob{
     val die = discrete(0 -> 0.1, 1 -> 0.2, 2->0.7)
 
     println(die.hist)
-    println(die.get)
+    println(die.sample(1))
   }
 }

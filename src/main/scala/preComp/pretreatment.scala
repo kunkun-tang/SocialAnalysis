@@ -45,8 +45,8 @@ object PreMain {
      * compute backBoneGraph with configuration.
      */
     val backBone= frdsMap.filter{ case (k,v)=> v.size>conf.getInt(dataSetName+".BackBoneDegree") }
-                    .keySet.toList
-    println(backBone.length)
+                    .keySet
+    println("backBone size = " + backBone.size)
     (frdsMap, backBone)
   }
 }
