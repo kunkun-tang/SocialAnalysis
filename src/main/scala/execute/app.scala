@@ -2,6 +2,7 @@ package execute
 
 import com.typesafe.config.ConfigFactory
 import preComp._
+import infer._
 
 /*
  * SocialAnalysis Main function.
@@ -19,6 +20,5 @@ object socialApp extends App{
 
   val inferSet = localGraph ++ localGraph2 ++ backBone
   println("inferSet size = "+inferSet.size)
-  
-  
+  Infer(frdsMap, inferSet)(src1, src2)
 }
