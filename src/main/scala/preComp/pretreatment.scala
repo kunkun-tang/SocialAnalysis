@@ -28,19 +28,34 @@ object PreMain {
      */
     for(i<- 0 to conf.getInt(dataSetName+".maxIDs"))
       frdsMap(i) = null
-   
-    Source.fromFile(conf.getString(dataSetName+".friendsFile")).getLines.
-    foreach{ 
-      line => if(line.startsWith("#", 0) == false)
-                putFrds(line.split('\t'))
+
+    // println("before reading files.")
+    // Source.fromFile(conf.getString(dataSetName+".friendsFile")).getLines.
+    // foreach{ 
+    //   line => putFrds(line.split('\t'))
+    // }
+
+    import org.apache.commons.io.LineIterator;
+    import org.apache.commons.io.FileUtils;
+    val file = new java.io.File(conf.getString(dataSetName+".friendsFile"))
+    val it = FileUtils.lineIterator(file, "UTF-8");
+    try {
+        while (it.hasNext()) {
+            val line = it.nextLine();
+            putFrds(line.split('\t'))
+        }
+    } finally {
+        LineIterator.closeQuietly(it);
     }
 
+
+    println("after reading files.")
     /*
      * prune people whose friends is null
      */
     pruneFrds(frdsMap, conf.getInt(dataSetName+".filterSmallDegree"))
     println("after prune frdsMap size = " + frdsMap.size)
-
+    
     /*
      * compute backBoneGraph with configuration.
      */

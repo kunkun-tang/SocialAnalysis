@@ -11,6 +11,6 @@ object mutualApp extends App{
 
   val conf = ConfigFactory.load
   val (frdsMap, backBone) = PreMain("DBLP")
+  // val (frdsMap, backBone) = PreMain("LiveJournal")
 
-  Curve(frdsMap);
 }

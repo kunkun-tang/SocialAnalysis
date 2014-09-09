@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
 	"org.scalatest" %% "scalatest" % "2.2.0" % "test",
 	"junit" % "junit" % "4.7" % "test",
   //"org.jliszka" % "probability-monad_2.9.2" % "1.0.0",
+	"commons-io" % "commons-io" % "2.4",
   "com.typesafe" % "config" % "0.4.0"
 )
 
