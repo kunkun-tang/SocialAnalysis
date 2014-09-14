@@ -6,7 +6,14 @@ import scala.collection.mutable.ArrayBuffer
 
 object PreMain {
 
+  /*
+   * frdsMap is (userID, ArrayBuffer(userID_63, userID_22, ...)) 
+        ArrayBuffer is userID's friends list.
+   * commsMap is (userID, ArrayBuffer(commID_23, commID_45, ...)) 
+        ArrayBuffer is userID's community list.
+   */
   val frdsMap = scala.collection.mutable.Map[Int, ArrayBuffer[Int]]()
+  val commsMap = scala.collection.mutable.Map[Int, ArrayBuffer[Int]]()
 
   def putFrds(tuple: Array[String])= if(tuple.length == 2){
     val frd1 = tuple(0).toInt
@@ -17,8 +24,26 @@ object PreMain {
     frdsMap(frd2) += frd1
   }
 
-  def pruneFrds(aMap: scala.collection.mutable.Map[Int, ArrayBuffer[Int]], smallDegree: Int)=
-    for( (k,v)<-aMap; if(v==null || v.size < smallDegree)) aMap -= k
+  def putComms(tuple: Array[String], commID: Int)= {
+    for(i<- 0 until tuple.length){
+      val num = tuple(i).toInt;
+      if(commsMap(num) == null) commsMap(num) = new ArrayBuffer[Int]();
+      commsMap(num) += commID;
+    }
+  }
+
+  /*
+   * pruneFrds makes users whose degree is always less than a threshold,
+   * delete related info in commMap meanwhile.
+   */
+  def pruneFrds(aMap: scala.collection.mutable.Map[Int, ArrayBuffer[Int]], 
+                commMap: scala.collection.mutable.Map[Int, ArrayBuffer[Int]], 
+                smallDegree: Int)=
+    for( (k,v)<-aMap; if(v==null || v.size < smallDegree)) {
+      aMap -= k
+      commMap -= k
+    }
+
 
   def apply(dataSetName: String) = {
     val conf = ConfigFactory.load
@@ -26,8 +51,10 @@ object PreMain {
     /*
      * init the frdsMap by assigning every Int with a null Friends List
      */
-    for(i<- 0 to conf.getInt(dataSetName+".maxIDs"))
+    for(i<- 0 to conf.getInt(dataSetName+".maxIDs")){
       frdsMap(i) = null
+      commsMap(i) = null
+    }
 
     // println("before reading files.")
     // Source.fromFile(conf.getString(dataSetName+".friendsFile")).getLines.
@@ -49,19 +76,36 @@ object PreMain {
     }
 
 
+    var commID = 0;
+    val commFile = new java.io.File(conf.getString(dataSetName+".communityFile"))
+    val itFile = FileUtils.lineIterator(commFile, "UTF-8");
+    try {
+        while (itFile.hasNext()) {
+          val line = itFile.nextLine();
+          putComms(line.split('\t'), commID);
+          commID += 1;
+        }
+    } finally {
+        LineIterator.closeQuietly(itFile);
+    }
+
     println("after reading files.")
+
     /*
-     * prune people whose friends is null
+     * prune people whose degree is less than a threshold
      */
-    pruneFrds(frdsMap, conf.getInt(dataSetName+".filterSmallDegree"))
+    pruneFrds(frdsMap, commsMap, conf.getInt(dataSetName+".filterSmallDegree"))
+
     println("after prune frdsMap size = " + frdsMap.size)
-    
+    println("after prune commsMap size = " + commsMap.size)
+
     /*
      * compute backBoneGraph with configuration.
      */
     val backBone= frdsMap.filter{ case (k,v)=> v.size>conf.getInt(dataSetName+".BackBoneDegree")}
                     .keySet
     println("backBone size = " + backBone.size)
-    (frdsMap, backBone)
+
+    (frdsMap, commsMap, backBone)
   }
 }
