@@ -10,7 +10,9 @@ import infer._
 object mutualApp extends App{
 
   val conf = ConfigFactory.load
-  //val (frdsMap, backBone) = PreMain("DBLP")
-  val (frdsMap, backBone) = PreMain("LiveJournal")
 
+  val (frdsMap, commsMap, backBone) = PreMain("DBLP")
+  // val (frdsMap, backBone) = PreMain("LiveJournal")
+  // CurveCommFrds(commsMap,frdsMap)
+  CurveMutualFrds(frdsMap)
 }
