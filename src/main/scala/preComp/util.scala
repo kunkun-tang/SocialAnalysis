@@ -16,8 +16,10 @@ object Util {
     var src2 = 0;
     val frdsMapSize  = frdsMap.size;
     var count = 0;
-    while(count < SEARCH_MAX_LOOP && !frdsMap.contains(src1) ){
+    var found = false;
+    while(count < SEARCH_MAX_LOOP && found == false ){
       src1 = rand.nextInt(frdsMapSize);
+      if(frdsMap.contains(src1)) found = true;
       count += 1
     }
     if(count == SEARCH_MAX_LOOP) {
@@ -25,8 +27,10 @@ object Util {
       System.exit(0);
     }
     count = 0;
-    while(count < SEARCH_MAX_LOOP && !frdsMap.contains(src2) && src1 != src2 ){
+    found = false;
+    while(count < SEARCH_MAX_LOOP && found == false && src1 != src2 ){
       src2 = rand.nextInt(frdsMapSize);
+      if(frdsMap.contains(src2)) found = true;
       count+=1;
     }
     if(count == SEARCH_MAX_LOOP) {

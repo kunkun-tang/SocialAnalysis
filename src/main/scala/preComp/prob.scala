@@ -24,9 +24,9 @@ object Prob{
   // bayesianCoin(5).given(_.flips.forall(_ == H)).pr(_.haveFairCoin)
 
   def apply()={
-    val die = discrete(0 -> 0.1, 1 -> 0.2, 2->0.7)
+    val die = discrete(0 -> 0.02, 1 -> 0.03, 2->0.95)
 
     println(die.hist)
-    println(die.sample(1))
+    println(die.sample(10))
   }
 }
