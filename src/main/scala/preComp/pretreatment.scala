@@ -62,17 +62,38 @@ object PreMain {
     //   line => putFrds(line.split('\t'))
     // }
 
+    /**
+     * file is a file for DBLP data, but a folder for LJ data.
+     * we operate DBLP data directly, but
+     * Because livejournal dataset is too large, we split it into several medium-size files.
+     */
     import org.apache.commons.io.LineIterator;
     import org.apache.commons.io.FileUtils;
     val file = new java.io.File(conf.getString(dataSetName+".friendsFile"))
-    val it = FileUtils.lineIterator(file, "UTF-8");
-    try {
-        while (it.hasNext()) {
-            val line = it.nextLine();
-            putFrds(line.split('\t'))
+    if(!file.isDirectory()){
+      val it = FileUtils.lineIterator(file, "UTF-8");
+      try {
+          while (it.hasNext()) {
+              val line = it.nextLine();
+              putFrds(line.split('\t'))
+          }
+      } finally {
+          LineIterator.closeQuietly(it);
+      }
+    }
+    else{
+        for( file <- file.listFiles(); if(file.getName().charAt(0)=='x')){
+          val it = FileUtils.lineIterator(file, "UTF-8");
+          try {
+              while (it.hasNext()) {
+                  val line = it.nextLine();
+                  putFrds(line.split('\t'))
+              }
+          } finally {
+              LineIterator.closeQuietly(it);
+          }
+          println(file.getName() + " done");
         }
-    } finally {
-        LineIterator.closeQuietly(it);
     }
 
 
@@ -108,4 +129,5 @@ object PreMain {
 
     (frdsMap, commsMap, backBone)
   }
+
 }
