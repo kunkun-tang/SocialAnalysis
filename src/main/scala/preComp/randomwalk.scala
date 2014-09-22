@@ -25,7 +25,7 @@ object RWM{
     // when retry count is not more than 10,000, or backBone list doesn contain source
     // randomwalk continues.
     while(count<10000 && !backBone.contains(source)){
-//      print(source+" ")
+      print(source+" ")
       val random_index = rand.nextInt(frdsMap(source).size)
       val random_node = frdsMap(source)(random_index)
       if(frdsMap.contains(random_node) && rand.nextDouble() <= math.min(1.0, frdsMap(random_node).size.toDouble/frdsMap(source).size.toDouble)) 
@@ -34,7 +34,7 @@ object RWM{
       localGraph += source
       count = count + 1 
     }
-//    println(" ")
+    println(" ")
     localGraph
   }
 }
@@ -57,9 +57,9 @@ object PageRankWalk{
     // when retry count is not more than 10,000, or backBone list doesn contain source
     // randomwalk continues.
     while(count<10000 && !backBone.contains(source)){
-//      print(source+" ")
-
       if(rand.nextDouble < restartProb) source = src
+      print(source+" ")
+
       val frds = frdsMap(source)
       var pairs = for(i<- 0 until frds.size; if(frdsMap.contains(frds(i)))) 
         yield (i, frdsMap(frds(i)).size)
@@ -82,7 +82,7 @@ object PageRankWalk{
       localGraph += source
       count += 1
     }
-//    println(" ")
+    println(" ")
     if(count == 10000) println("too many loops in PAGERANK random walk.")
     localGraph
   }
