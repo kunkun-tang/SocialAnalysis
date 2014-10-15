@@ -117,15 +117,30 @@ object PreMain {
      */
     pruneFrds(frdsMap, commsMap, conf.getInt(dataSetName+".filterSmallDegree"))
 
-    println("after prune frdsMap size = " + frdsMap.size)
     println("after prune commsMap size = " + commsMap.size)
 
     /*
      * compute backBoneGraph with configuration.
      */
-    val backBone= frdsMap.filter{ case (k,v)=> v.size>conf.getInt(dataSetName+".BackBoneDegree")}
-                    .keySet
+    val backBone= frdsMap.filter{ case (k,v)=> v.size>conf.getInt(dataSetName+".BackBoneDegree")}.keySet
     println("backBone size = " + backBone.size)
+
+    /*
+     * insert frdsMap to MongoDB.
+     */
+    import com.mongodb.casbah.Imports._
+    val mongoClient = MongoClient("localhost", 27017)
+    val db = mongoClient("liang")
+
+    val coll = db("liang")
+    coll.drop();
+
+    for((k,v) <- frdsMap){
+      val list = MongoDBList();
+      v.foreach(e=>{list += e});
+      coll.insert(MongoDBObject(k.toString -> list))
+    }
+    println("after prune frdsMap size = " + frdsMap.size)
 
     (frdsMap, commsMap, backBone)
   }

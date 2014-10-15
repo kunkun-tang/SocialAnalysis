@@ -20,23 +20,23 @@ object PAGERANKApp extends App{
 
   var count = 0;
   var LOCALSET_INCREMENT = 0;
-  while(count < TEST_SOURCE_NUM){
+ //  while(count < TEST_SOURCE_NUM){
 
-	  val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
-	  println(src1 + "  ---  "+ src2)
-	  val localGraph = PageRankWalk(frdsMap, backBone)(src1)
-	  val localGraph2 = PageRankWalk(frdsMap, backBone)(src2)
+	//   val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
+	//   println(src1 + "  ---  "+ src2)
+	//   val localGraph = PageRankWalk(frdsMap, backBone)(src1)
+	//   val localGraph2 = PageRankWalk(frdsMap, backBone)(src2)
 
-	  val localSet = localGraph ++ localGraph2 
-	  LOCALSET_INCREMENT += localSet.size
-	  count += 1;
+	//   val localSet = localGraph ++ localGraph2 
+	//   LOCALSET_INCREMENT += localSet.size
+	//   count += 1;
 
-	  val metrolocalGraph = RWM(frdsMap, backBone)(src1)
-	  val metrolocalGraph2 = RWM(frdsMap, backBone)(src2)
+	//   val metrolocalGraph = RWM(frdsMap, backBone)(src1)
+	//   val metrolocalGraph2 = RWM(frdsMap, backBone)(src2)
 
-	  val metrolocalSet = metrolocalGraph ++ metrolocalGraph2 
-	  println("metrolocalSet = " + metrolocalSet.size + " PageRank size = " + localSet.size)
-	}
+	//   val metrolocalSet = metrolocalGraph ++ metrolocalGraph2 
+	//   println("metrolocalSet = " + metrolocalSet.size + " PageRank size = " + localSet.size)
+	// }
 
 	 println("localSet size = "+LOCALSET_INCREMENT/TEST_SOURCE_NUM + "  backBone set = "+ backBone.size)
 

@@ -22,7 +22,6 @@ object CurveMutualFrds{
      * In frdsMap, the frdsRelationship might be single-direction. 
      * The blow block make the frdsRelationship have the double-direction map.
      */
-
     val mutFrdsRelationship = Map[Int, (Int, Int)]();
     for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
 
@@ -59,6 +58,75 @@ object CurveMutualFrds{
   }
 }
 
+object MongoCurveMutualFrds{
+
+  val rand = new Random(System.currentTimeMillis())
+
+  import com.mongodb.casbah.Imports._
+  val mongoClient = MongoClient("localhost", 27017)
+  val db = mongoClient("liang")
+  val coll = db("liang")
+
+  def findNumMutualFrds(frds1: List[Any], frds2: List[Any]) = {
+
+    val aList = frds1.filter{_.isInstanceOf[Int]}  
+    val bList = frds2.filter{_.isInstanceOf[Int]}  
+    aList.toSet.intersect(bList.toSet).size
+  }
+
+  def apply(frdsMap: Map[Int, ArrayBuffer[Int]]) = {
+  
+    /*
+     * In frdsMap, the frdsRelationship might be single-direction. 
+     * The blow block make the frdsRelationship have the double-direction map.
+     */
+    val mutFrdsRelationship = Map[Int, (Int, Int)]();
+    for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
+
+    val totalP = coll.size;
+    var loopCount = 0;
+    val cursor = coll.find();
+    while(cursor.hasNext){
+      val kv1 = cursor.next();
+      val k1 = kv1.toList(1)._1;
+      loopCount += 1;
+      if(loopCount % 100 == 0)
+        println("percent = "+ loopCount.toDouble/totalP);
+
+      val cursor2 = coll.find();
+      while(cursor2.hasNext == true){
+
+        val kv2 = cursor2.next();
+        val k2 = kv2.toList(1)._1;
+        if(k1.toInt < k2.toInt){
+          if(rand.nextDouble()<0.001){
+
+            val v1 = kv1.as[MongoDBList](k1).toList; 
+            val v2 = kv2.as[MongoDBList](k2).toList; 
+            val num = findNumMutualFrds(v1, v2)
+            if(num>0){
+              val (tup1, tup2) = mutFrdsRelationship(num)
+              if(v1.contains(k2)){
+                mutFrdsRelationship(num) = (tup1+1, tup2+1)
+              }
+              else{
+                mutFrdsRelationship(num) = (tup1, tup2+1)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    import java.io.PrintWriter
+    val S = new PrintWriter("test_5.txt")
+    for (i <- 1 to 200) {
+      val (a,b) = mutFrdsRelationship(i);
+      S.println(i+ " " + a + "  " + b + "  "+ a.toDouble/b)
+    }
+    S.close()
+  }
+}
 
 object CurveCommFrds{
 

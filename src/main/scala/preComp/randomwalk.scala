@@ -32,7 +32,7 @@ object RWM{
         source = random_node
 
       localGraph += source
-      count = count + 1 
+      count = count + 1
     }
     println(" ")
     localGraph
