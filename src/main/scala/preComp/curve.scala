@@ -25,6 +25,8 @@ object CurveMutualFrds{
     val mutFrdsRelationship = Map[Int, (Int, Int)]();
     for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
 
+    println(9809 + "  value = " + frdsMap(9809));
+
     val totalP = frdsMap.size;
     var loopCount = 0;
     for((k1,v1)<- frdsMap){
@@ -33,11 +35,12 @@ object CurveMutualFrds{
         println("percent = "+ loopCount.toDouble/totalP);
       for((k2,v2)<- frdsMap; if(k1 < k2) ){
 
-        if(rand.nextDouble()<0.001){
+        if(rand.nextDouble()<1){
           val num = findNumMutualFrds(v1, v2)
           if(num>0){
             val (tup1, tup2) = mutFrdsRelationship(num)
             if(v1.contains(k2)){
+              // println(k1 + " " + k2)
               mutFrdsRelationship(num) = (tup1+1, tup2+1)
             }
             else{
@@ -70,7 +73,7 @@ object MongoCurveMutualFrds{
   def findNumMutualFrds(frds1: List[Any], frds2: List[Any]) = {
 
     val aList = frds1.filter{_.isInstanceOf[Int]}  
-    val bList = frds2.filter{_.isInstanceOf[Int]}  
+    val bList = frds2.filter{_.isInstanceOf[Int]}
     aList.toSet.intersect(bList.toSet).size
   }
 
@@ -79,7 +82,12 @@ object MongoCurveMutualFrds{
     /*
      * In frdsMap, the frdsRelationship might be single-direction. 
      * The blow block make the frdsRelationship have the double-direction map.
+     * key is the number of mutual Friends, 
+     * (v1, v2) is the value, where v2 denotes how many pairs having ths number of mutual friends.
+     * v1 denotes how many pairs they are friends each other regarding they are having key mutual friends.
+     *
      */
+
     val mutFrdsRelationship = Map[Int, (Int, Int)]();
     for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
 
@@ -90,8 +98,9 @@ object MongoCurveMutualFrds{
       val kv1 = cursor.next();
       val k1 = kv1.toList(1)._1;
       loopCount += 1;
-      if(loopCount % 100 == 0)
+      if(loopCount % 100 == 0){
         println("percent = "+ loopCount.toDouble/totalP);
+      }
 
       val cursor2 = coll.find();
       while(cursor2.hasNext == true){
@@ -99,14 +108,16 @@ object MongoCurveMutualFrds{
         val kv2 = cursor2.next();
         val k2 = kv2.toList(1)._1;
         if(k1.toInt < k2.toInt){
-          if(rand.nextDouble()<0.001){
+          if(rand.nextDouble()<1){
 
             val v1 = kv1.as[MongoDBList](k1).toList; 
             val v2 = kv2.as[MongoDBList](k2).toList; 
             val num = findNumMutualFrds(v1, v2)
             if(num>0){
               val (tup1, tup2) = mutFrdsRelationship(num)
-              if(v1.contains(k2)){
+              val friends1 = v1.filter{_.isInstanceOf[Int]}
+
+              if(friends1.contains(k2.toInt)){
                 mutFrdsRelationship(num) = (tup1+1, tup2+1)
               }
               else{
@@ -128,10 +139,10 @@ object MongoCurveMutualFrds{
   }
 }
 
+
 object CurveCommFrds{
 
   val rand = new Random(System.currentTimeMillis())
-
   def findNumMutualFrds(frds1: ArrayBuffer[Int], frds2: ArrayBuffer[Int]) = {
     if(frds1 == null || frds2 == null) 0
     else{

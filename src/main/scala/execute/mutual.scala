@@ -13,5 +13,6 @@ object mutualApp extends App{
   val (frdsMap, commsMap, backBone) = PreMain("DBLP")
   // val (frdsMap, backBone) = PreMain("LiveJournal")
   // CurveCommFrds(commsMap,frdsMap)
-  MongoCurveMutualFrds(frdsMap)
+  // MongoCurveMutualFrds(frdsMap)
+  MongoCurveMutualFrds(frdsMap);
 }
