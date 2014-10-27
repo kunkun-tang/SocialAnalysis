@@ -25,8 +25,6 @@ object CurveMutualFrds{
     val mutFrdsRelationship = Map[Int, (Int, Int)]();
     for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
 
-    println(9809 + "  value = " + frdsMap(9809));
-
     val totalP = frdsMap.size;
     var loopCount = 0;
     for((k1,v1)<- frdsMap){
