@@ -9,7 +9,8 @@ import scala.util.Random
 import scala.math
 
 object CurveMutualFrds{
-
+  
+  val conf = ConfigFactory.load
   val rand = new Random(System.currentTimeMillis())
 
   def findNumMutualFrds(frds1: ArrayBuffer[Int], frds2: ArrayBuffer[Int]) = {
@@ -62,6 +63,7 @@ object CurveMutualFrds{
 object MongoCurveMutualFrds{
 
   val rand = new Random(System.currentTimeMillis())
+  val conf = ConfigFactory.load
 
   import com.mongodb.casbah.Imports._
   val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
@@ -134,6 +136,7 @@ object MongoCurveMutualFrds{
 
 object CurveCommFrds{
 
+  val conf = ConfigFactory.load
   val rand = new Random(System.currentTimeMillis())
   def findNumMutualFrds(frds1: ArrayBuffer[Int], frds2: ArrayBuffer[Int]) = {
     if(frds1 == null || frds2 == null) 0

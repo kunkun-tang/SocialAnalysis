@@ -269,11 +269,11 @@ object PreMain {
       val query1 =  MongoDBObject("_id" -> frd1);
       var cursor = coll.find(query1);
       if(cursor.hasNext){
-        val obj = cursor.next();
-        val k2 = obj.toList(1)._1;
-        var currList = obj.as[MongoDBList](k2).toList;
-        val list2 = currList ::: List(frd2); 
-        val insert = MongoDBObject(frd1.toString -> MongoDBList(list2:_*))
+        // val obj = cursor.next();
+        // val k2 = obj.toList(1)._1;
+        // var currList = obj.as[MongoDBList](k2).toList;
+        // val list2 = currList ::: List(frd2); 
+        val insert = MongoDBObject("$push" -> MongoDBObject(frd1.toString -> frd2))
         coll.update(query1, insert);
       }
       else{
@@ -284,11 +284,11 @@ object PreMain {
       val query2 =  MongoDBObject("_id" -> frd2);
       cursor = coll.find(query2);
       if(cursor.hasNext){
-        val obj = cursor.next();
-        val k2 = obj.toList(1)._1;
-        var currList = obj.as[MongoDBList](k2).toList;
-        val list2 = currList ::: List(frd1); 
-        val insert = MongoDBObject(frd2.toString -> MongoDBList(list2:_*))
+        // val obj = cursor.next();
+        // val k2 = obj.toList(1)._1;
+        // var currList = obj.as[MongoDBList](k2).toList;
+        // val list2 = currList ::: List(frd1); 
+        val insert = MongoDBObject("$push" -> MongoDBObject(frd2.toString -> frd1))
         coll.update(query2, insert);
       }
       else{
