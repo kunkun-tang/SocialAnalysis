@@ -47,6 +47,8 @@ object PreMain {
       commMap -= k;
       smallDegreeNodes += k;
     }
+    println("first prune frdsMap size = " + aMap.size)
+
     /*
      * smallDegreeNodes collects nodes whose degree is less than threshold, and we filter all 
      * these nodes in other nodes' friends.
@@ -133,8 +135,6 @@ object PreMain {
     for( (k,v)<-frdsMap; if(v==null)) {
       frdsMap -= k;
     }
-
-    println("before prune frdsMap size = " + frdsMap.size)
 
     pruneFrds(frdsMap, commsMap, conf.getInt(dataSetName+".filterSmallDegree"))
 
@@ -330,6 +330,7 @@ object PreMain {
        * these nodes in other nodes' friends.
        */
       cursor = coll.find();
+      println("after first prune cursor size = "+ cursor.size);
       while(cursor.hasNext){
         val kv = cursor.next();
         val k = kv.toList(1)._1;

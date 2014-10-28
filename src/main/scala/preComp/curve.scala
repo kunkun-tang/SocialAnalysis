@@ -75,17 +75,11 @@ object MongoCurveMutualFrds{
     aList.toSet.intersect(bList.toSet).size
   }
 
-  def apply(frdsMap: Map[Int, ArrayBuffer[Int]]) = {
+  def apply() = {
   
     /*
-     * In frdsMap, the frdsRelationship might be single-direction. 
-     * The blow block make the frdsRelationship have the double-direction map.
-     * key is the number of mutual Friends, 
-     * (v1, v2) is the value, where v2 denotes how many pairs having ths number of mutual friends.
-     * v1 denotes how many pairs they are friends each other regarding they are having key mutual friends.
      *
      */
-
     val mutFrdsRelationship = Map[Int, (Int, Int)]();
     for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
 
