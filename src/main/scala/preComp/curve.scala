@@ -77,7 +77,7 @@ object MongoCurveMutualFrds{
     aList.toSet.intersect(bList.toSet).size
   }
 
-  def apply() = {
+  def apply(dataSetName: String) = {
   
     /*
      *
@@ -124,10 +124,11 @@ object MongoCurveMutualFrds{
     }
 
     import java.io.PrintWriter
-    val S = new PrintWriter("test_" + conf.getString("filterSmallDegree") + ".txt")
+    val S = new PrintWriter("test_" + conf.getString(dataSetName+".filterSmallDegree") + ".txt")
     for (i <- 1 to 200) {
       val (a,b) = mutFrdsRelationship(i);
       S.println(i+ " " + a + "  " + b + "  "+ a.toDouble/b)
+      println(i+ " " + a + "  " + b + "  "+ a.toDouble/b)
     }
     S.close()
   }
