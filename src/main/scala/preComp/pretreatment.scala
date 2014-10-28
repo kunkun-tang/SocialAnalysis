@@ -61,8 +61,7 @@ object PreMain {
     }  
   }
 
-
-  def apply(dataSetName: String) = {
+  def applyMemory(dataSetName: String) = {
     val conf = ConfigFactory.load
 
     /*
@@ -72,12 +71,6 @@ object PreMain {
       frdsMap(i) = null
       commsMap(i) = null
     }
-
-    // println("before reading files.")
-    // Source.fromFile(conf.getString(dataSetName+".friendsFile")).getLines.
-    // foreach{ 
-    //   line => putFrds(line.split('\t'))
-    // }
 
     /**
      * file is a file for DBLP data, but a folder for LJ data.
@@ -132,10 +125,83 @@ object PreMain {
     /*
      * prune people whose degree is less than a threshold
      */
-    for( (k,v)<-frdsMap; if(v==null)) {
-      frdsMap -= k;
+    pruneFrds(frdsMap, commsMap, conf.getInt(dataSetName+".filterSmallDegree"))
+    println("after prune commsMap size = " + commsMap.size)
+    println("after prune frdsMap size = " + frdsMap.size)
+
+    /*
+     * compute backBoneGraph with configuration.
+     */
+    val backBone= frdsMap.filter{ case (k,v)=> v.size>conf.getInt(dataSetName+".BackBoneDegree")}.keySet
+    println("backBone size = " + backBone.size)
+    (frdsMap, commsMap, backBone)
+  }
+
+
+  def applySemiDB(dataSetName: String) = {
+    val conf = ConfigFactory.load
+
+    /*
+     * init the frdsMap by assigning every Int with a null Friends List
+     */
+    for(i<- 0 to conf.getInt(dataSetName+".maxIDs")){
+      frdsMap(i) = null
+      commsMap(i) = null
     }
 
+    /**
+     * file is a file for DBLP data, but a folder for LJ data.
+     * we operate DBLP data directly, but
+     * Because livejournal dataset is too large, we split it into several medium-size files.
+     */
+    import org.apache.commons.io.LineIterator;
+    import org.apache.commons.io.FileUtils;
+    val file = new java.io.File(conf.getString(dataSetName+".friendsFile"))
+    if(!file.isDirectory()){
+      val it = FileUtils.lineIterator(file, "UTF-8");
+      try {
+          while (it.hasNext()) {
+              val line = it.nextLine();
+              putFrds(line.split('\t'))
+          }
+      } finally {
+          LineIterator.closeQuietly(it);
+      }
+    }
+    else{
+        for( file <- file.listFiles(); if(file.getName().charAt(0)=='x')){
+          val it = FileUtils.lineIterator(file, "UTF-8");
+          try {
+              while (it.hasNext()) {
+                  val line = it.nextLine();
+                  putFrds(line.split('\t'))
+              }
+          } finally {
+              LineIterator.closeQuietly(it);
+          }
+          println(file.getName() + " done");
+        }
+    }
+
+
+    var commID = 0;
+    val commFile = new java.io.File(conf.getString(dataSetName+".communityFile"))
+    val itFile = FileUtils.lineIterator(commFile, "UTF-8");
+    try {
+        while (itFile.hasNext()) {
+          val line = itFile.nextLine();
+          putComms(line.split('\t'), commID);
+          commID += 1;
+        }
+    } finally {
+        LineIterator.closeQuietly(itFile);
+    }
+
+    println("after reading files.")
+
+    /*
+     * prune people whose degree is less than a threshold
+     */
     pruneFrds(frdsMap, commsMap, conf.getInt(dataSetName+".filterSmallDegree"))
 
     println("after prune commsMap size = " + commsMap.size)
@@ -151,7 +217,7 @@ object PreMain {
      * insert frdsMap to MongoDB.
      */
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", 27017)
+    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
     val db = mongoClient("liang")
 
     val coll = db("liang")
@@ -160,9 +226,8 @@ object PreMain {
     for((k,v) <- frdsMap){
       val list = MongoDBList();
       v.foreach(e=>{list += e});
-      coll.insert(MongoDBObject(k.toString -> list))
+      coll.insert(MongoDBObject("_id" -> k, k.toString -> list))
     }
-
     (frdsMap, commsMap, backBone)
   }
 
@@ -185,7 +250,7 @@ object PreMain {
     import org.apache.commons.io.LineIterator;
     import org.apache.commons.io.FileUtils;
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", 27017)
+    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
     val db = mongoClient("liang")
     val coll = db("liang")
     coll.drop();
@@ -195,18 +260,12 @@ object PreMain {
     var dynamicFrds = new ArrayBuffer[Int]();
 
     def putMONGOFrds(tuple: Array[String])= if(tuple.length == 2){
-      val frd1 = tuple(0).toInt
-      val frd2 = tuple(1).toInt
-      // if(previous!= frd1){
-      //   if(previous != -1){
-      //     val list = MongoDBList();
-      //     dynamicFrds.foreach(e=>{list += e});
-      //     coll.insert(MongoDBObject("_id"->previous, previous.toString -> list))
-      //   }
-      //   dynamicFrds = ArrayBuffer[Int]()
-      // }
-      // dynamicFrds += frd2;
-      // previous = frd1;
+      val frd1 = tuple(0).toInt;
+      val frd2 = tuple(1).toInt;
+      /*
+       * Based on (p, q) pair, put friend q to p's friends List.
+       * Similarly, put p to q's friends List.
+       */
       val query1 =  MongoDBObject("_id" -> frd1);
       var cursor = coll.find(query1);
       if(cursor.hasNext){
@@ -248,41 +307,6 @@ object PreMain {
         count += 1;
         if(count %10000 == 0) println("line number: " + count);
       }
-      // if(previous != -1){
-      //   val list = MongoDBList();
-      //   dynamicFrds.foreach(e=>{list += e});
-      //   coll.insert(MongoDBObject(previous.toString -> list))
-      // }
-
-      /*
-       * the original dataset file is single-oriented(like, (5, [6,7,8])  (6, [7]), friend 6 
-         doesn't have the friend of 5. Then we need to supplement those friends.)
-       */
-      // count = 0;
-      // for(kv<- coll.find()){
-      //   if(count %100 == 0) println("line number: " + count);
-      //   count += 1;
-      //   val k1 = kv.toList(1)._1;
-      //   val v1 = kv.as[MongoDBList](k1).toList; 
-      //   val friends = v1.filter{_.isInstanceOf[Int]}
-      //   for(i <- friends){
-      //     val query =  MongoDBObject("_id" -> i);
-      //     val cursor = coll.find(query);
-      //     if(cursor.hasNext){
-      //       val obj = cursor.next();
-      //       val k2 = obj.toList(1)._1;
-      //       var currList = obj.as[MongoDBList](k2).toList;
-      //       val list2 = currList ::: List(k1.toInt); 
-      //       val insert = MongoDBObject(i.toString -> MongoDBList(list2:_*))
-      //       coll.update(query, insert);
-      //     }
-      //     else{
-      //       val insert = MongoDBObject("_id" -> i, i.toString -> MongoDBList(k1.toInt))
-      //       coll.insert(insert);
-      //     }
-      //   }
-      // }
-
     } finally {
         LineIterator.closeQuietly(it);
     }
@@ -303,7 +327,6 @@ object PreMain {
 
     println("after reading files.")
 
-
     /*
      * pruneLJFrds makes users whose degree is always less than a threshold,
      * delete related info in commMap meanwhile.
@@ -321,13 +344,17 @@ object PreMain {
         if(v1.size < smallDegree){
           commMap -= k1.toInt;
           smallDegreeNodes += k1.toInt;
-          coll.remove(kv1);
+          // coll.remove(kv1);
         }
       }
 
+      val query =  MongoDBObject("_id" -> MongoDBObject("$in" -> MongoDBList(smallDegreeNodes.toList:_*)));
+      coll.remove(query);
+
       /*
        * smallDegreeNodes collects nodes whose degree is less than threshold, and we filter all 
-       * these nodes in other nodes' friends.
+       * these nodes in other nodes' friends. For exmaple(5-> [1, 2, 3, 6, 7]), because node 6 is in small
+       * degree nodes set, then we should delete node 6 in 5's friends. Then it should be 5-> [1, 2, 3, 7]
        */
       cursor = coll.find();
       println("after first prune cursor size = "+ cursor.size);

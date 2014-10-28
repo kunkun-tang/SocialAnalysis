@@ -11,7 +11,7 @@ import scala.util.Random
 object PAGERANKApp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain("DBLP")
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory("DBLP")
 
   val TEST_SOURCE_NUM = conf.getInt("DBLP.TEST_SOURCE_NUM")
 
@@ -45,7 +45,7 @@ object PAGERANKApp extends App{
 object MetroPolispp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain("DBLP")
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory("DBLP")
 
   val TEST_SOURCE_NUM = conf.getInt("DBLP.TEST_SOURCE_NUM")
 
@@ -74,7 +74,7 @@ object MetroPolispp extends App{
 object LJPAGERANKApp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain("LiveJournal")
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory("LiveJournal")
 
   val TEST_SOURCE_NUM = conf.getInt("DBLP.TEST_SOURCE_NUM")
 

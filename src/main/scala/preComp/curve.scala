@@ -64,7 +64,7 @@ object MongoCurveMutualFrds{
   val rand = new Random(System.currentTimeMillis())
 
   import com.mongodb.casbah.Imports._
-  val mongoClient = MongoClient("localhost", 27017)
+  val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
   val db = mongoClient("liang")
   val coll = db("liang")
 
@@ -122,7 +122,7 @@ object MongoCurveMutualFrds{
     }
 
     import java.io.PrintWriter
-    val S = new PrintWriter("test_5.txt")
+    val S = new PrintWriter("test_" + conf.getString("filterSmallDegree") + ".txt")
     for (i <- 1 to 200) {
       val (a,b) = mutFrdsRelationship(i);
       S.println(i+ " " + a + "  " + b + "  "+ a.toDouble/b)
