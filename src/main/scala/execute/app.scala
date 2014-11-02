@@ -11,7 +11,7 @@ import scala.util.Random
 object PAGERANKApp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain("DBLP")
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory("DBLP")
 
   val TEST_SOURCE_NUM = conf.getInt("DBLP.TEST_SOURCE_NUM")
 
@@ -20,32 +20,32 @@ object PAGERANKApp extends App{
 
   var count = 0;
   var LOCALSET_INCREMENT = 0;
-  while(count < TEST_SOURCE_NUM){
+ //  while(count < TEST_SOURCE_NUM){
 
-	  val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
-	  println(src1 + "  ---  "+ src2)
-	  val localGraph = PageRankWalk(frdsMap, backBone)(src1)
-	  val localGraph2 = PageRankWalk(frdsMap, backBone)(src2)
+	//   val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
+	//   println(src1 + "  ---  "+ src2)
+	//   val localGraph = PageRankWalk(frdsMap, backBone)(src1)
+	//   val localGraph2 = PageRankWalk(frdsMap, backBone)(src2)
 
-	  val localSet = localGraph ++ localGraph2 
-	  LOCALSET_INCREMENT += localSet.size
-	  count += 1;
+	//   val localSet = localGraph ++ localGraph2 
+	//   LOCALSET_INCREMENT += localSet.size
+	//   count += 1;
 
-	  val metrolocalGraph = RWM(frdsMap, backBone)(src1)
-	  val metrolocalGraph2 = RWM(frdsMap, backBone)(src2)
+	//   val metrolocalGraph = RWM(frdsMap, backBone)(src1)
+	//   val metrolocalGraph2 = RWM(frdsMap, backBone)(src2)
 
-	  val metrolocalSet = metrolocalGraph ++ metrolocalGraph2 
-	  println("metrolocalSet = " + metrolocalSet.size + " PageRank size = " + localSet.size)
-	}
+	//   val metrolocalSet = metrolocalGraph ++ metrolocalGraph2 
+	//   println("metrolocalSet = " + metrolocalSet.size + " PageRank size = " + localSet.size)
+	// }
 
 	 println("localSet size = "+LOCALSET_INCREMENT/TEST_SOURCE_NUM + "  backBone set = "+ backBone.size)
 
 }
 
-object MetroPolispp extends App{
+object MetroPolisApp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain("DBLP")
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory("DBLP")
 
   val TEST_SOURCE_NUM = conf.getInt("DBLP.TEST_SOURCE_NUM")
 
@@ -56,7 +56,7 @@ object MetroPolispp extends App{
   var LOCALSET_INCREMENT = 0;
   while(count < TEST_SOURCE_NUM){
 
-	  val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
+	  val (src1, src2) = Util.genTwoSrcFromDB("DBLP");
 
 	  val localGraph = RWM(frdsMap, backBone)(src1)
 	  val localGraph2 = RWM(frdsMap, backBone)(src2)
@@ -70,11 +70,64 @@ object MetroPolispp extends App{
 
 }
 
+object MetroPolisDBApp extends App{
+
+  val conf = ConfigFactory.load
+  val datasetName = "LiveJournal";
+  val (frdsMap_0, commsMap, backBone) = PreMain.applyDB(datasetName)
+
+  val TEST_SOURCE_NUM = conf.getInt("LiveJournal.TEST_SOURCE_NUM")
+  val frdsMap = Util.genFrdsMapFromDB(datasetName)
+
+  var count = 0;
+  var LOCALSET_INCREMENT = 0;
+  while(count < TEST_SOURCE_NUM){
+
+	  val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
+
+	  val localGraph = RWM.apply(frdsMap, backBone)(src1)
+	  val localGraph2 = RWM.apply(frdsMap, backBone)(src2)
+
+	  val localSet = localGraph ++ localGraph2 
+	  LOCALSET_INCREMENT += localSet.size
+	  count += 1;
+	}
+
+	 println("localSet size = "+LOCALSET_INCREMENT/TEST_SOURCE_NUM + "  backBone set = "+ backBone.size)
+
+}
+
+
+object PageRankDBApp extends App{
+
+  val conf = ConfigFactory.load
+  val datasetName = "LiveJournal";
+  val (frdsMap_0, commsMap, backBone) = PreMain.applyDB(datasetName)
+
+  val TEST_SOURCE_NUM = conf.getInt("LiveJournal.TEST_SOURCE_NUM")
+  val frdsMap = Util.genFrdsMapFromDB(datasetName)
+
+  var count = 0;
+  var LOCALSET_INCREMENT = 0;
+  while(count < TEST_SOURCE_NUM){
+
+	  val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
+
+	  val localGraph = PageRankWalk.apply(frdsMap, backBone)(src1)
+	  val localGraph2 = PageRankWalk.apply(frdsMap, backBone)(src2)
+
+	  val localSet = localGraph ++ localGraph2 
+	  LOCALSET_INCREMENT += localSet.size
+	  count += 1;
+	}
+
+	 println("localSet size = "+LOCALSET_INCREMENT/TEST_SOURCE_NUM + "  backBone set = "+ backBone.size)
+}
 
 object LJPAGERANKApp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain("LiveJournal")
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory("LiveJournal")
 
   val TEST_SOURCE_NUM = conf.getInt("DBLP.TEST_SOURCE_NUM")
 

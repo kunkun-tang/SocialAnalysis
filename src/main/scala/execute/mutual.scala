@@ -11,8 +11,12 @@ object mutualApp extends App{
 
   val conf = ConfigFactory.load
 
-  val (frdsMap, commsMap, backBone) = PreMain("DBLP")
+  val datasetName = "LiveJournal";
+  val (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
+  // println(frdsMap(91919))
   // val (frdsMap, backBone) = PreMain("LiveJournal")
   // CurveCommFrds(commsMap,frdsMap)
-  CurveMutualFrds(frdsMap)
+  // MongoCurveMutualFrds(datasetName)
+  MongoCurveCommFrds(datasetName, commsMap)
+  // MongoCurveMutualFrds(frdsMap);
 }
