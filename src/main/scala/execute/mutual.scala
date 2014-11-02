@@ -10,10 +10,12 @@ import infer._
 object mutualApp extends App{
 
   val conf = ConfigFactory.load
-  val (frdsMap, commsMap, backBone) = PreMain.applyDB("DBLP")
+  val datasetName = "LiveJournal";
+  val (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
   // println(frdsMap(91919))
   // val (frdsMap, backBone) = PreMain("LiveJournal")
   // CurveCommFrds(commsMap,frdsMap)
-  MongoCurveMutualFrds("DBLP")
+  // MongoCurveMutualFrds(datasetName)
+  MongoCurveCommFrds(datasetName, commsMap)
   // MongoCurveMutualFrds(frdsMap);
 }

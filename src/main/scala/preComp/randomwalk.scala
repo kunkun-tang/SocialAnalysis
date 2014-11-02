@@ -12,6 +12,8 @@ import probabilitymonad.Distribution._
 object RWM{
 
   val rand = new Random(System.currentTimeMillis())
+  val conf = ConfigFactory.load
+
   /*
    * The second argument means the source ID initializing random walk.
    */
@@ -25,7 +27,7 @@ object RWM{
     // when retry count is not more than 10,000, or backBone list doesn contain source
     // randomwalk continues.
     while(count<10000 && !backBone.contains(source)){
-      print(source+" ")
+//      print(source+" ")
       val random_index = rand.nextInt(frdsMap(source).size)
       val random_node = frdsMap(source)(random_index)
       if(frdsMap.contains(random_node) && rand.nextDouble() <= math.min(1.0, frdsMap(random_node).size.toDouble/frdsMap(source).size.toDouble)) 
@@ -34,14 +36,32 @@ object RWM{
       localGraph += source
       count = count + 1
     }
-    println(" ")
+//    println(" ")
     localGraph
   }
+
+  def applyDB(backBone: scala.collection.Set[Int])(src: Int, dataSetName: String) = {
+  
+    import com.mongodb.casbah.Imports._
+    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val db = mongoClient(dataSetName)
+    val coll = db("liang");
+
+    val localGraph = new HashSet[Int]()
+    var source = src
+    localGraph += source
+    var count=0;
+
+    localGraph
+  }
+
 }
 
 object PageRankWalk{
 
   val rand = new Random(System.currentTimeMillis())
+  val conf = ConfigFactory.load
+
   /*
    * The second argument means the source ID initializing random walk.
    */
@@ -58,7 +78,7 @@ object PageRankWalk{
     // randomwalk continues.
     while(count<10000 && !backBone.contains(source)){
       if(rand.nextDouble < restartProb) source = src
-      print(source+" ")
+//      print(source+" ")
 
       val frds = frdsMap(source)
       var pairs = for(i<- 0 until frds.size; if(frdsMap.contains(frds(i)))) 
@@ -82,7 +102,7 @@ object PageRankWalk{
       localGraph += source
       count += 1
     }
-    println(" ")
+//    println(" ")
     if(count == 10000) println("too many loops in PAGERANK random walk.")
     localGraph
   }
