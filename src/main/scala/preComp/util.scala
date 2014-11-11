@@ -16,6 +16,7 @@ object Util {
   var keyList: List[Int] = null;
 
   val SEARCH_MAX_LOOP = 1000;
+
   def genTwoSourceNodes(frdsMap: Map[Int, ArrayBuffer[Int]]) = {
 
     if(keyList == null)
@@ -85,4 +86,80 @@ object Util {
     frdsMap
   }
 
+  def findNumMutualFrds(frds1: ArrayBuffer[Int], frds2: ArrayBuffer[Int]) = {
+    frds1.toSet.intersect(frds2.toSet).size
+  }
+
+  def findNumMutualComms(frds1: ArrayBuffer[Int], frds2: ArrayBuffer[Int]) = {
+    if(frds1 == null || frds2 == null) 0
+    else{
+      frds1.toSet.intersect(frds2.toSet).size
+    }
+  }
+
+  def sampleQueryNodes(n: Int, frdsMap: Map[Int, ArrayBuffer[Int]], commMap: Map[Int, ArrayBuffer[Int]])={
+    
+    /*
+     * [mutualFrdsNum, Array*:([a1, a2], [b1, b2], ...)  ]
+     * [a1, a2] is a nodes pair, which consists of two persons a1 and a2.
+     */
+    val samplePair = Map[Int, (Int, Int)]();
+    if(keyList == null)
+      keyList = frdsMap.keySet.toList;
+
+    /*
+     * The sampling procedure works as follows:
+     1). always find two random nodes, and get the mutual frds number of them two.
+     2). append the pair to the value of Map if the limit is reached
+     */
+    var break = false;
+    while(break == false){
+      val a = keyList(rand.nextInt(keyList.size));
+      val b = keyList(rand.nextInt(keyList.size));
+      if(a<b){
+        val num = findNumMutualFrds(frdsMap(a), frdsMap(b))
+        if(num > 0 && num<=n && samplePair.contains(num) == false)
+          samplePair += num->(a,b);
+        if(samplePair.size == num) break = true;
+      }
+    }
+    throw new Exception("How did I end up here?")
+
+    /*
+     * [mutualCommsNum, Array*:([a1, a2], [b1, b2], ...)  ]
+     */
+    val commPair = Map[Int, ArrayBuffer[(Int, Int)]]();
+    while(true){
+      val a = keyList(rand.nextInt(keyList.size));
+      val b = keyList(rand.nextInt(keyList.size));
+      if(a<b){
+        val num = findNumMutualComms(frdsMap(a), frdsMap(b))
+        if(num > 0){
+          if(commPair.contains(num) == false)
+            commPair += num-> ArrayBuffer[(Int, Int)]();
+            if(commPair(num).size < 5 && commPair(num).contains((a,b)) == false)
+              commPair(num) += ((a,b))
+        }
+      }
+    }
+    throw new Exception("How did I end up here?")
+    (samplePair, commPair)
+  }
+
+  import scala.collection.mutable.HashSet
+  def prune(aMap: Map[Int, ArrayBuffer[Int]], keepSet: HashSet[Int]) = {
+
+    /*
+     * keepSet collects nodes id which is remained in the fiveSet, and we should keep them
+     * in the final frdsMap. Then, we filter out all nodes which is not in fiveSet.
+     */
+    var frdsMap = aMap.filter{ case (k,v) => keepSet.contains(k) == true};
+    for( (k,v)<-frdsMap) {
+      val replaceV = v.filter{ case elem:Int => keepSet.contains(elem) == true};
+      if(replaceV.size> 0)
+        frdsMap(k) = replaceV;
+      else frdsMap -= k;
+    }
+    frdsMap
+  }
 }

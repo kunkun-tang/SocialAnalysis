@@ -9,38 +9,31 @@ import scala.util.Random
 import scala.math
 import probabilitymonad.Distribution._
 
-object Infer{
-
-  abstract class Clause(src1: Int, src2: Int){
-  	// result is to differentiate the clause is true or not.
-  	val result: Boolean = false;
-  }
-
-  case class FrdClause(val numMutualFrds: Int, src1: Int, src2: Int) extends Clause(src1, src2)
-  case class CommClause(val numMutualComms: Int, src1: Int, src2: Int) extends Clause(src1, src2)
-
+object MCSAT{
 
   val rand = new Random(System.currentTimeMillis())
   var frdsMapGlobal = Map[Int, ArrayBuffer[Int]]()
-  var FRAlwaysTrue= Map[(Int, Int), Boolean]()
-  var FRDynamic = Map[(Int, Int), Boolean]()
-  var formulaMap = Map[Clause, Boolean]()
 
   def ifTwoPersonKnow(src: Int, dest: Int) = frdsMapGlobal(src).contains(dest)
 
-  def genRandomBoolean() = if(rand.nextDouble()<0.5) true else false
-
-  def assignBin(aFRAlwaysTrue: Map[(Int, Int), Boolean]) = {
-    for( (i, j)<- FRAlwaysTrue ){
-      if(FRDynamic.contains(i))
-        aFRAlwaysTrue += i ->true
-      else
-        aFRAlwaysTrue += i -> genRandomBoolean()
-    }
+  def findNumMutualFrds(src1: Int, src2: Int) = {
+    val frds1 = frdsMapGlobal(src1);
+    val frds2 = frdsMapGlobal(src2);
+    frds1.toSet.intersect(frds2.toSet).size
   }
 
-  def ifFormulaTrue(src1: Int, src2: Int, src3: Int) = 
-      false
+  def flip(pred: Predicate) = pred.result = !pred.result
+
+  def genRandomBoolean() = if(rand.nextDouble()<0.5) true else false
+  	/*
+  	 * iterate over the clause arrays, if the predictArr could change its results,
+  	 * assign a boolean to the predicate.
+  	 */
+		def assignBin(clausesArr: ArrayBuffer[Clause]) = {
+		  for( clau <- clausesArr ){
+		  	if(clau.pred2.changeEnable == false) clau.pred2.result = genRandomBoolean()
+		}
+  }
 
 
   def apply(frdsMap: Map[Int, ArrayBuffer[Int]], commMap: Map[Int, ArrayBuffer[Int]])(src1: Int, src2: Int) = {
@@ -48,38 +41,49 @@ object Infer{
     frdsMapGlobal = frdsMap
     val conf = ConfigFactory.load
 
-    /* 
-     * In the whole inferSet, if two people know each other, the two is signed
-     * to true. If not, a random boolean is assigned to the relationship.
+    /*
+     * In the first time, we need to give random boolean value to all friends pairs.
      */
+    val frdsArr = new ArrayBuffer[FrdPredict]();
+
     for( (i1, i2)<- frdsMap; (j1, j2)<- frdsMap; if(i1<j1) ){
-      if(ifTwoPersonKnow(i1,j1)){
-        FRAlwaysTrue += (i1,j1)->true
-        FRDynamic += (i1,j1)->true
-      }
+      if(ifTwoPersonKnow(i1,j1))
+      	frdsArr.append(FrdPredict(i1, j1, true));
       else
-        FRDynamic += (i1,j1)->genRandomBoolean
+        frdsArr.append(FrdPredict(i1, j1, genRandomBoolean))
     }
 
-    /*
-     * because FRAlwaysTrue should not contain (k,v) (v<=k), we can ignore half matrix.
+    /* 
+     * The MC-SAT sample loop starts from 1 to a sample upper limit.
      */
-    println("formulaMap size = " + formulaMap.size)
-    // walkSAT(formulaMap)
+    val probList = List(0.2, 0.3, 0.4);
+    for(sampleNum <- 1 to conf.getInt("MCSATSampleNum")){
+
+	    val clausesArr = new ArrayBuffer[Clause]();
+	    for(frd <- frdsArr){
+    		val num = findNumMutualFrds(frd.src1, frd.src2);
+
+    		if(num > 0 && ifTwoPersonKnow(frd.src1, frd.src2) == false && rand.nextDouble() < computeWeight( probList(num)) ){
+    			val aClause = new Clause(MutualFrd(num, frd.src1, frd.src2), frd);
+    			clausesArr.append(aClause);
+    		}
+	    }
+
+      /*
+       * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
+       */
+	    walkSAT(clausesArr);
+  	}
   }
 
 
-  def walkSAT(formulas: Map[(Int, Int, Int), Boolean]) = {
-    // val walkFRAlwaysTrue = Map[(Int, Int), Boolean]();
-    // assignBin(walkFRAlwaysTrue)
-    // for((i1, i2)<- walkFRAlwaysTrue; (j1, j2)<-walkFRAlwaysTrue.filter{ case (k,v) =>k._1==i1._2 })
-    //   formulas((i1._1, i1._2, j1._2)) = ifFormulaTrue(i1._1, i1._2, j1._2)
-    // var falseFormulas = formulas.filter{ case(k,v)=> v==false}.toList;
-    // println("falseFormulas size = "+ falseFormulas.length)
-    // var count = 1;
-    // while(count< 10000){
-    //   val formula = falseFormulas(rand.nextInt(falseFormulas.size)) 
-    //   count += 1
-    // }
+  def walkSAT(clausesArr: ArrayBuffer[Clause]) = {
+    assignBin(clausesArr);
+    var wrongClauses = clausesArr.filter{ clau => clau.result == false}
+
+    /*
+     * WalkSat part
+     */
+    wrongClauses.foreach{ wc => flip(wc.pred2)};
   }
 }
