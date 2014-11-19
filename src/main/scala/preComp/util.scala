@@ -7,6 +7,7 @@ import scala.util.Random
 import scala.collection.mutable.Map
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.Set
+import scala.util.control.Breaks._
 
 object Util {
 
@@ -97,13 +98,8 @@ object Util {
     }
   }
 
-  def sampleQueryNodes(n: Int, frdsMap: Map[Int, ArrayBuffer[Int]], commMap: Map[Int, ArrayBuffer[Int]])={
+  def sampleUniformQueryNodes(n: Int, frdsMap: Map[Int, ArrayBuffer[Int]], commMap: Map[Int, ArrayBuffer[Int]])={
     
-    /*
-     * [mutualFrdsNum, Array*:([a1, a2], [b1, b2], ...)  ]
-     * [a1, a2] is a nodes pair, which consists of two persons a1 and a2.
-     */
-    val samplePair = Map[Int, (Int, Int)]();
     if(keyList == null)
       keyList = frdsMap.keySet.toList;
 
@@ -112,37 +108,33 @@ object Util {
      1). always find two random nodes, and get the mutual frds number of them two.
      2). append the pair to the value of Map if the limit is reached
      */
-    var break = false;
-    while(break == false){
+    def samplePairIterate(func: (ArrayBuffer[Int], ArrayBuffer[Int])=>Int, 
+                          pairs: Map[Int, (Int, Int)]): Unit =  { 
+      while(true) { 
       val a = keyList(rand.nextInt(keyList.size));
       val b = keyList(rand.nextInt(keyList.size));
       if(a<b){
-        val num = findNumMutualFrds(frdsMap(a), frdsMap(b))
-        if(num > 0 && num<=n && samplePair.contains(num) == false)
-          samplePair += num->(a,b);
-        if(samplePair.size == num) break = true;
+        val num = func(frdsMap(a), frdsMap(b))
+        if(num > 0 && num<=n && pairs.contains(num) == false){
+          pairs += num->(a,b);
+        }
       }
-    }
-    throw new Exception("How did I end up here?")
+      if(pairs.size >= n) return
+    }}
 
+    /*
+     * [mutualFrdsNum, Array*:([a1, a2], [b1, b2], ...)  ]
+     * [a1, a2] is a nodes pair, which consists of two persons a1 and a2.
+     */
+    val samplePair = Map[Int, (Int, Int)]();
+    samplePairIterate(findNumMutualFrds, samplePair);
     /*
      * [mutualCommsNum, Array*:([a1, a2], [b1, b2], ...)  ]
      */
-    val commPair = Map[Int, ArrayBuffer[(Int, Int)]]();
-    while(true){
-      val a = keyList(rand.nextInt(keyList.size));
-      val b = keyList(rand.nextInt(keyList.size));
-      if(a<b){
-        val num = findNumMutualComms(frdsMap(a), frdsMap(b))
-        if(num > 0){
-          if(commPair.contains(num) == false)
-            commPair += num-> ArrayBuffer[(Int, Int)]();
-            if(commPair(num).size < 5 && commPair(num).contains((a,b)) == false)
-              commPair(num) += ((a,b))
-        }
-      }
-    }
-    throw new Exception("How did I end up here?")
+    val commPair = Map[Int, (Int, Int)]();
+    samplePairIterate(findNumMutualComms, commPair);
+
+    // println(samplePair);
     (samplePair, commPair)
   }
 
@@ -162,4 +154,5 @@ object Util {
     }
     frdsMap
   }
+  
 }

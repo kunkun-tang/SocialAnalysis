@@ -110,7 +110,7 @@ object PageRankDBApp extends App{
 object InferApp extends App{
 
   val conf = ConfigFactory.load
-  val datasetName = "LiveJournal";
+  val datasetName = "DBLP";
   val (frdsMap_0, commsMap, backBone) = PreMain.applyDB(datasetName)
 
   val frdsMap = Util.genFrdsMapFromDB(datasetName)
@@ -119,30 +119,23 @@ object InferApp extends App{
    * frdsPair consist of sample pair of two nodes, which have mutual friend number information.
    * commsPair includes the mutual community number key value.
    */
-  val (frdsPair, commsPair) = Util.sampleQueryNodes(1, frdsMap, commsMap);
+  val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
 
   var count = 0;
   var LOCALSET_INCREMENT = 0;
   for((k,v) <- frdsPair){
 
 	  val (src1, src2) = (v._1, v._2);
-
 	  val localGraph = PageRankWalk.apply(frdsMap, backBone)(src1)
 	  val localGraph2 = PageRankWalk.apply(frdsMap, backBone)(src2)
-	  val localSet = localGraph ++ localGraph2 
+	  val localSet = localGraph ++ localGraph2  ++ backBone
+	  println("localSet size = " + localSet.size)
 
-	  val inferFrdsMap = Util.prune(frdsMap, localSet)
+	  /*
+	   * inferFrdsMap is the final fiveSet frdsMap.
+	   */
+	  val inferFrdsMap = Util.prune(frdsMap, localSet);
+	  println("fiveSet size = " + inferFrdsMap.size)
   }
- //  while(count < TEST_SOURCE_NUM){
-
-	//   val (src1, src2) = Util.genTwoSourceNodes(frdsMap);
-
-	//   val localGraph = PageRankWalk.apply(frdsMap, backBone)(src1)
-	//   val localGraph2 = PageRankWalk.apply(frdsMap, backBone)(src2)
-
-	//   val localSet = localGraph ++ localGraph2 
-	//   LOCALSET_INCREMENT += localSet.size
-	//   count += 1;
-	// }
 
 }

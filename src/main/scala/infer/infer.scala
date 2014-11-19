@@ -29,9 +29,9 @@ object MCSAT{
   	 * iterate over the clause arrays, if the predictArr could change its results,
   	 * assign a boolean to the predicate.
   	 */
-		def assignBin(clausesArr: ArrayBuffer[Clause]) = {
-		  for( clau <- clausesArr ){
-		  	if(clau.pred2.changeEnable == false) clau.pred2.result = genRandomBoolean()
+	def assignBin(clausesArr: ArrayBuffer[Clause]) = {
+		for( clau <- clausesArr ){
+		  if(clau.pred2.changeEnable == false) clau.pred2.result = genRandomBoolean()
 		}
   }
 
