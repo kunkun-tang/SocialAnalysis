@@ -99,12 +99,13 @@ object MongoCurveMutualFrds{
       val kv1 = cursor.next();
       val k1 = kv1.toList(1)._1;
       loopCount += 1;
-      if(loopCount % 100 == 0){
+      println("percent = "+ loopCount.toDouble/totalP);
+      if(loopCount % 5 == 0){
         println("percent = "+ loopCount.toDouble/totalP);
         for (i <- 1 to 70) {
           val (a,b) = mutFrdsRelationship(i);
           println(i+ " " + a + "  " + b + "  "+ a.toDouble/b)
-        }      
+        }
       }
 
       val cursor2 = coll.find();
@@ -113,7 +114,7 @@ object MongoCurveMutualFrds{
         val kv2 = cursor2.next();
         val k2 = kv2.toList(1)._1;
         if(k1.toInt < k2.toInt){
-          if(rand.nextDouble()<0.01){
+          if(rand.nextDouble()<0.2){
 
             val v1 = kv1.as[MongoDBList](k1).toList; 
             val v2 = kv2.as[MongoDBList](k2).toList; 
@@ -245,7 +246,7 @@ object MongoCurveCommFrds{
       }
       for((k2,v2)<- commMap; if(k1 < k2) ){
 
-        if(rand.nextDouble()<0.1){
+        if(rand.nextDouble()<0.2){
 
           val num = findNumMutualFrds(v1, v2)
           if(num>0){

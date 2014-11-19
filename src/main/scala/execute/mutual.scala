@@ -16,7 +16,7 @@ object mutualApp extends App{
   // println(frdsMap(91919))
   // val (frdsMap, backBone) = PreMain("LiveJournal")
   // CurveCommFrds(commsMap,frdsMap)
-  // MongoCurveMutualFrds(datasetName)
+  MongoCurveMutualFrds(datasetName)
   MongoCurveCommFrds(datasetName, commsMap)
   // MongoCurveMutualFrds(frdsMap);
 }
