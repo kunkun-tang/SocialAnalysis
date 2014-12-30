@@ -148,9 +148,7 @@ object Util {
     var frdsMap = aMap.filter{ case (k,v) => keepSet.contains(k) == true};
     for( (k,v)<-frdsMap) {
       val replaceV = v.filter{ case elem:Int => keepSet.contains(elem) == true};
-      if(replaceV.size> 0)
-        frdsMap(k) = replaceV;
-      else frdsMap -= k;
+      frdsMap(k) = replaceV;
     }
     frdsMap
   }
