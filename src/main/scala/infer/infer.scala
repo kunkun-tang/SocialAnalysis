@@ -45,12 +45,19 @@ object MCSAT {
     }
   }
 
+  /*
+   * frdsMap is (userID, ArrayBuffer(userID_63, userID_22, ...)) 
+        ArrayBuffer is userID's friends list.
+   * commsMap is (userID, ArrayBuffer(commID_23, commID_45, ...)) 
+        ArrayBuffer is userID's community list.
+   */
   def apply(frdsMap: Map[Int, ArrayBuffer[Int]], commMap: Map[Int, ArrayBuffer[Int]])(src1: Int, src2: Int) = {
 
     frdsMapGlobal = frdsMap
     commsMapGlobal = commMap
     val conf = ConfigFactory.load
     println("src1 ="+src1 + " src2="+src2)
+
     /*
      * In the first time, we need to give random boolean value to all friends pairs.
      */
@@ -67,14 +74,14 @@ object MCSAT {
         frdPredict.result = genRandomBoolean
         frdsArr.append(frdPredict)
       }
-      if (i1 == src1 && j1 == src2) {
-        if(ifTwoPersonKnow(i1, j1)) println("They already know each other")
-        queryFrdPredict = frdsArr(frdsArr.size - 1)
-        queryFrdPredict.result = false;
-      }
+      // if (i1 == src1 && j1 == src2) {
+      //   if(ifTwoPersonKnow(i1, j1)) println("They already know each other")
+      //   queryFrdPredict = frdsArr(frdsArr.size - 1)
+      //   queryFrdPredict.result = false;
+      // }
     }
 
-    /* 
+    /*
      * The MC-SAT sample loop starts from 1 to a sample upper limit.
      */
     for (sampleNum <- 1 to conf.getInt("MCSATSampleNum")) {
@@ -106,20 +113,20 @@ object MCSAT {
         }
       }
 
-      for (frd <- frdsArr) {
-        val num = findNumMutualComms(frd.src1, frd.src2);
+      // for (frd <- frdsArr) {
+      //   val num = findNumMutualComms(frd.src1, frd.src2);
 
-        if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
-          val pred1 = MutualComm(num, frd.src1, frd.src2);
-          pred1.result = true;
-          val aClause = new Clause(pred1, frd, num);
-          clausesArr.append(aClause);
-          if (clausesMap.contains((frd.src1, frd.src2))) {
-            var v = clausesMap((frd.src1, frd.src2))
-            clausesMap((frd.src1, frd.src2)) = (v._1, aClause);
-          } else clausesMap += (frd.src1, frd.src2) -> (null, aClause)
-        }
-      }
+      //   if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
+      //     val pred1 = MutualComm(num, frd.src1, frd.src2);
+      //     pred1.result = true;
+      //     val aClause = new Clause(pred1, frd, num);
+      //     clausesArr.append(aClause);
+      //     if (clausesMap.contains((frd.src1, frd.src2))) {
+      //       var v = clausesMap((frd.src1, frd.src2))
+      //       clausesMap((frd.src1, frd.src2)) = (v._1, aClause);
+      //     } else clausesMap += (frd.src1, frd.src2) -> (null, aClause)
+      //   }
+      // }
       /*
        * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
        */
