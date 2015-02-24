@@ -111,31 +111,32 @@ object InferApp extends App{
 
   val conf = ConfigFactory.load
   val datasetName = "DBLP";
-  val (frdsMap_0, commsMap, backBone) = PreMain.applyDB(datasetName)
+  val (frdsMap, commsMap, backBone) = PreMain.applyMemory(datasetName)
 
-  val frdsMap = Util.genFrdsMapFromDB(datasetName)
-
+  // val frdsMap = Util.genFrdsMapFromDB(datasetName)
   /*
    * frdsPair consist of sample pair of two nodes, which have mutual friend number information.
    * commsPair includes the mutual community number key value.
    */
   val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
-
-  var count = 0;
-  var LOCALSET_INCREMENT = 0;
-  for((k,v) <- frdsPair){
-
-	  val (src1, src2) = (v._1, v._2);
-	  val localGraph = PageRankWalk.apply(frdsMap, backBone)(src1)
-	  val localGraph2 = PageRankWalk.apply(frdsMap, backBone)(src2)
-	  val localSet = localGraph ++ localGraph2  ++ backBone
-	  println("localSet size = " + localSet.size)
-
-	  /*
-	   * inferFrdsMap is the final fiveSet frdsMap.
-	   */
-	  val inferFrdsMap = Util.prune(frdsMap, localSet);
-	  println("fiveSet size = " + inferFrdsMap.size)
+  var (src1, src2) = Util.genTwoSourceNodes(frdsMap);
+  if(src1 > src2){
+    var temp = src1;
+    src1 = src2
+    src2 = temp;
   }
 
+  val localGraph = RWM.apply(frdsMap, backBone)(src1)
+  val localGraph2 = RWM.apply(frdsMap, backBone)(src2)
+  val fiveSet = localGraph ++ localGraph2  ++ backBone
+
+  /*
+   * inferFrdsMap is the final fiveSet frdsMap.
+   */
+  val inferFrdsMap = Util.prune(frdsMap, fiveSet);
+  println("fiveSet size = " + inferFrdsMap.size)
+  // }
+  println("inferFrdsMap.contains(src1) = " + inferFrdsMap.contains(src1))
+  println("inferFrdsMap.contains(src2) = " + inferFrdsMap.contains(src2))
+  MCSAT(inferFrdsMap,commsMap)(src1,src2)
 }
