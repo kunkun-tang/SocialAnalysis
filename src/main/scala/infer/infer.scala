@@ -63,23 +63,50 @@ object MCSAT {
      */
     val frdsArr = new ArrayBuffer[FrdPredict]();
     var queryFrdPredict: FrdPredict = null;
+    var count1 =0; var count2 = 0;
     for ((i1, i2) <- frdsMap; (j1, j2) <- frdsMap; if (i1 < j1)) {
 
       if (ifTwoPersonKnow(i1, j1)) {
         val frdPredict = FrdPredict(i1, j1, false);
         frdPredict.result = true
         frdsArr.append(frdPredict);
+        count1 += 1
       } else {
         val frdPredict = FrdPredict(i1, j1, true);
         frdPredict.result = genRandomBoolean
         frdsArr.append(frdPredict)
-      }
+        count2 += 1
+      }      
       // if (i1 == src1 && j1 == src2) {
       //   if(ifTwoPersonKnow(i1, j1)) println("They already know each other")
       //   queryFrdPredict = frdsArr(frdsArr.size - 1)
       //   queryFrdPredict.result = false;
       // }
     }
+
+    /*
+     * ClausesArr is clauses set, which includes satisfied clauses.
+     * clausesMap is clauses HashMap
+     * (src1, src2) ->  (muturalFrdClause, mutualCommClause)
+     */
+    var clausesArr = new ArrayBuffer[Clause]();
+    var clausesMap = new HashMap[(Int, Int), (Clause, Clause)]();
+
+    for (frdPredict <- frdsArr; if frdPredict.result == true) {
+      val num = findNumMutualFrds(frdPredict.src1, frdPredict.src2);
+      // if(num>0)
+      //   println(frdPredict.src1 + " " + frdPredict.src2 + " " + num + " "+ probCommonFrd(num) + "  " + computeWeightBasedonNumber(num))
+      if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
+        val pred1 = MutualFrd(num, frdPredict.src1, frdPredict.src2);
+        pred1.result = true;
+        val aClause = new Clause(pred1, frdPredict, num);
+        clausesArr.append(aClause);
+        clausesMap += (frdPredict.src1, frdPredict.src2) -> (aClause, null)
+      }
+    }
+
+    walkSAT(clausesArr);
+
 
     /*
      * The MC-SAT sample loop starts from 1 to a sample upper limit.
@@ -127,6 +154,7 @@ object MCSAT {
       //     } else clausesMap += (frd.src1, frd.src2) -> (null, aClause)
       //   }
       // }
+
       /*
        * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
        */
