@@ -116,6 +116,7 @@ object MCSAT {
       }
     }
 
+    println("before access clausesArr size = " + clausesArr.size);
     //After WalkSAT, we back up the frdsMapLocal.
     walkSAT(clausesArr, clausesMap);
     frdsMapGlobal = frdsMapLocal
@@ -123,6 +124,7 @@ object MCSAT {
     /*
      * The MC-SAT sample loop starts from 1 to a sample upper limit.
      */
+    var counter = 0
     for (sampleNum <- 1 to conf.getInt("MCSATSampleNum")) {
 
     	//re new ArraBuffer and HashMap
@@ -152,7 +154,7 @@ object MCSAT {
 	      }
 
       }
-			println("before walkSAT len = " + clausesArr.filter { clau => clau.result() == false }.length))
+			// println("before walkSAT len = " + clausesArr.filter { clau => clau.result() == false }.length)
       /*
        * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
        */
@@ -162,7 +164,10 @@ object MCSAT {
 
       // val num = findNumMutualFrds(queryFrdPredict.src1, queryFrdPredict.src2)
       // println(num + "  " + queryFrdPredict.result)
+      if(frdsMapGlobal(src1).contains(src2) == true ) counter += 1
     }
+
+    println("If the the two people know each other = " + counter.toFloat/conf.getInt("MCSATSampleNum"))
   }
 
   def walkSAT(clausesArr: ArrayBuffer[Clause], clausesMap: HashMap[(Int, Int), (Clause, Clause)]) = {
@@ -226,7 +231,8 @@ object MCSAT {
 
 	    wrongClauses = clausesArr.filter { clau => clau.result() == false }
 	    wrongClausesNum = wrongClauses.length;
-      println("iterWalkSAT=" + iterWalkSAT + "  wrongClausesNum = " + wrongClausesNum);
+	    if(iterWalkSAT % 100 == 0)
+      	println("iterWalkSAT=" + iterWalkSAT + "  wrongClausesNum = " + wrongClausesNum);
       iterWalkSAT += 1;
     }
   }
