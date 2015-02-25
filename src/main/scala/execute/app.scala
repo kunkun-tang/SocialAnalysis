@@ -140,3 +140,37 @@ object InferApp extends App{
   println("inferFrdsMap.contains(src2) = " + inferFrdsMap.contains(src2))
   MCSAT(inferFrdsMap,commsMap)(src1,src2)
 }
+
+object DBLPInferApp extends App{
+
+  val conf = ConfigFactory.load
+  val datasetName = conf.getString("DataSetName");
+  val (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
+
+  frdsMap = Util.genFrdsMapFromDB(datasetName)
+  /*
+   * frdsPair consist of sample pair of two nodes, which have mutual friend number information.
+   * commsPair includes the mutual community number key value.
+   */
+  // val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
+  var (src1, src2) = Util.genTwoSrcFromDB(datasetName);
+  if(src1 > src2){
+    var temp = src1;
+    src1 = src2
+    src2 = temp;
+  }
+
+  val localGraph = RWM.apply(frdsMap, backBone)(src1)
+  val localGraph2 = RWM.apply(frdsMap, backBone)(src2)
+  val fiveSet = localGraph ++ localGraph2  ++ backBone
+
+  /*
+   * inferFrdsMap is the final fiveSet frdsMap.
+   */
+  val inferFrdsMap = Util.prune(frdsMap, fiveSet);
+  println("fiveSet size = " + inferFrdsMap.size)
+  // }
+  println("inferFrdsMap.contains(src1) = " + inferFrdsMap.contains(src1))
+  println("inferFrdsMap.contains(src2) = " + inferFrdsMap.contains(src2))
+  MCSAT(inferFrdsMap,commsMap)(src1,src2)
+}

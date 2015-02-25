@@ -252,8 +252,8 @@ object PreMain {
     import com.mongodb.casbah.Imports._
     val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
 
-    val db = mongoClient(dataSetName)
-    val coll = db("liang");
+    val db = mongoClient(dataSetName+"Split")
+    val coll = db("train");
     // coll.drop();
 
     if(conf.getBoolean(dataSetName + ".writeDB")){
@@ -387,6 +387,7 @@ object PreMain {
       println("before prune frdsMap size = " + coll.find().size)
       pruneLJFrds(commsMap, conf.getInt(dataSetName+".filterSmallDegree"))
     }
+
     /*
      * compute backBoneGraph with configuration.
      */
@@ -396,10 +397,10 @@ object PreMain {
 
     val backBone = coll.find().flatMap{ 
       case p: DBObject => {
-                            val key = p.toList(1)._1;
-                            val v = p.as[MongoDBList](key).toList; 
-                            if(v.size > conf.getInt(dataSetName+".BackBoneDegree")) Some(key.toInt)
-                            else None
+          val key = p.toList(1)._1;
+          val v = p.as[MongoDBList](key).toList; 
+          if(v.size > conf.getInt(dataSetName+".BackBoneDegree")) Some(key.toInt)
+          else None
     }}.toSet
 
     println("backBone size = " + backBone.size)

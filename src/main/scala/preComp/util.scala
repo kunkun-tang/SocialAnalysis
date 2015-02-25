@@ -61,8 +61,8 @@ object Util {
 
     import com.mongodb.casbah.Imports._
     val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
-    val db = mongoClient(dataSetName)
-    val coll = db("liang");
+    val db = mongoClient(dataSetName+"Split")
+    val coll = db("train");
 
     val cursor = coll.find();
     while(cursor.hasNext){

@@ -152,7 +152,6 @@ object MCSAT {
 	      }
 
       }
-			println("before walkSAT len = " + clausesArr.filter { clau => clau.result() == false }.length))
       /*
        * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
        */

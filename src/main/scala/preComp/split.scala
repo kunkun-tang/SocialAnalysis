@@ -87,4 +87,7 @@ object Split {
 
   }
 
+  def main(args: Array[String]) = {
+    Split.applyDB("DBLP")
+  }
 }
