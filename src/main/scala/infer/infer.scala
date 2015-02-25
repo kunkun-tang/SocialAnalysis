@@ -14,6 +14,8 @@ object MCSAT {
 
   val rand = new Random(System.currentTimeMillis())
   var frdsMapGlobal = Map[Int, ArrayBuffer[Int]]()
+  var frdsMapLocal = Map[Int, ArrayBuffer[Int]]()
+
   var commsMapGlobal = Map[Int, ArrayBuffer[Int]]()
 
   def ifTwoPersonKnow(src: Int, dest: Int) = frdsMapGlobal(src).contains(dest)
@@ -21,6 +23,12 @@ object MCSAT {
   def findNumMutualFrds(src1: Int, src2: Int) = {
     val frds1 = frdsMapGlobal(src1);
     val frds2 = frdsMapGlobal(src2);
+    frds1.toSet.intersect(frds2.toSet).size
+  }
+
+  def findNumMutualFrdsLocal(src1: Int, src2: Int) = {
+    val frds1 = frdsMapLocal(src1);
+    val frds2 = frdsMapLocal(src2);
     frds1.toSet.intersect(frds2.toSet).size
   }
 
@@ -58,8 +66,9 @@ object MCSAT {
     val conf = ConfigFactory.load
     println("src1 ="+src1 + " src2="+src2)
 
+
     /*
-     * In the first time, we need to give random boolean value to all friends pairs.
+     * frdsAr can be regarded as a collections of frds pair.
      */
     val frdsArr = new ArrayBuffer[FrdPredict]();
     var queryFrdPredict: FrdPredict = null;
@@ -76,15 +85,14 @@ object MCSAT {
         frdPredict.result = genRandomBoolean
         frdsArr.append(frdPredict)
         count2 += 1
-      }      
-      // if (i1 == src1 && j1 == src2) {
-      //   if(ifTwoPersonKnow(i1, j1)) println("They already know each other")
-      //   queryFrdPredict = frdsArr(frdsArr.size - 1)
-      //   queryFrdPredict.result = false;
-      // }
+      }
     }
 
     /*
+     * Before MC-SAT run repeatedly, we need to give random boolean value to all friends pairs.
+     * Then run WalkSAT.
+     *
+     * Frist, we select pairs from original pair of any two persons.
      * ClausesArr is clauses set, which includes satisfied clauses.
      * clausesMap is clauses HashMap
      * (src1, src2) ->  (muturalFrdClause, mutualCommClause)
@@ -92,94 +100,182 @@ object MCSAT {
     var clausesArr = new ArrayBuffer[Clause]();
     var clausesMap = new HashMap[(Int, Int), (Clause, Clause)]();
 
-    for (frdPredict <- frdsArr; if frdPredict.result == true) {
+    for (frdPredict <- frdsArr) {
       val num = findNumMutualFrds(frdPredict.src1, frdPredict.src2);
       // if(num>0)
       //   println(frdPredict.src1 + " " + frdPredict.src2 + " " + num + " "+ probCommonFrd(num) + "  " + computeWeightBasedonNumber(num))
       if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
-        val pred1 = MutualFrd(num, frdPredict.src1, frdPredict.src2);
-        pred1.result = true;
-        val aClause = new Clause(pred1, frdPredict, num);
-        clausesArr.append(aClause);
-        clausesMap += (frdPredict.src1, frdPredict.src2) -> (aClause, null)
+      	if( (probCommonFrd(num) >= 0.5 && frdPredict.result == true) || 
+      			(probCommonFrd(num) < 0.5 && frdPredict.result == false) ){
+	        val pred1 = MutualFrd(num, frdPredict.src1, frdPredict.src2);
+	        pred1.result = true;
+	        val aClause = new Clause(pred1, frdPredict, num);
+	        clausesArr.append(aClause);
+	        clausesMap += (frdPredict.src1, frdPredict.src2) -> (aClause, null)
+      	}
       }
     }
 
-    walkSAT(clausesArr);
-
+    //After WalkSAT, we back up the frdsMapLocal.
+    walkSAT(clausesArr, clausesMap);
+    frdsMapGlobal = frdsMapLocal
 
     /*
      * The MC-SAT sample loop starts from 1 to a sample upper limit.
      */
     for (sampleNum <- 1 to conf.getInt("MCSATSampleNum")) {
 
-      /*
-       * ClausesArr is clauses set, which includes satisfied clauses.
-       * ClausesArr is clauses HashMap
-       * (src1, src2) ->  (muturalFrdClause, mutualCommClause)
-       */
-      val clausesArr = new ArrayBuffer[Clause]();
-      val clausesMap = new HashMap[(Int, Int), (Clause, Clause)]();
+    	//re new ArraBuffer and HashMap
+      clausesArr = new ArrayBuffer[Clause]();
+      clausesMap = new HashMap[(Int, Int), (Clause, Clause)]();
 
       /**
        * The iteration begins from finding the mutual frd number of two persons.
-       * ifTwoPersonKnow(frd.src1, frd.src2) == false has to be satisfied when put in to Constraint set.
-       * since it is highly possible that two persons don't know each other.
-       *
+       * (frd1, frd2, +n)->(frd1, frd2) has to be satisfied in order to be 
+       * put in to Constraint set.
        * Besides, it must satisfy the probability that the clause be into the Constraint set.
        */
       for (frd <- frdsArr) {
-        val num = findNumMutualFrds(frd.src1, frd.src2);
+	      val num = findNumMutualFrdsLocal(frdPredict.src1, frdPredict.src2);
+	      // if(num>0)
+	      //   println(frdPredict.src1 + " " + frdPredict.src2 + " " + num + " "+ probCommonFrd(num) + "  " + computeWeightBasedonNumber(num))
 
-        if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
-          val pred1 = MutualFrd(num, frd.src1, frd.src2);
-          pred1.result = true;
-          val aClause = new Clause(pred1, frd, num);
-          clausesArr.append(aClause);
-          clausesMap += (frd.src1, frd.src2) -> (aClause, null)
-        }
+	      if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
+	      	if( (probCommonFrd(num) >= 0.5 && frdPredict.result == true) || 
+	      			(probCommonFrd(num) < 0.5 && frdPredict.result == false) ){
+		        val pred1 = MutualFrd(num, frdPredict.src1, frdPredict.src2);
+		        pred1.result = true;
+		        val aClause = new Clause(pred1, frdPredict, num);
+		        clausesArr.append(aClause);
+		        clausesMap += (frdPredict.src1, frdPredict.src2) -> (aClause, null)
+	      	}
+	      }
+
       }
-
-      // for (frd <- frdsArr) {
-      //   val num = findNumMutualComms(frd.src1, frd.src2);
-
-      //   if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
-      //     val pred1 = MutualComm(num, frd.src1, frd.src2);
-      //     pred1.result = true;
-      //     val aClause = new Clause(pred1, frd, num);
-      //     clausesArr.append(aClause);
-      //     if (clausesMap.contains((frd.src1, frd.src2))) {
-      //       var v = clausesMap((frd.src1, frd.src2))
-      //       clausesMap((frd.src1, frd.src2)) = (v._1, aClause);
-      //     } else clausesMap += (frd.src1, frd.src2) -> (null, aClause)
-      //   }
-      // }
 
       /*
        * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
        */
-      println("clausesArr size = " + clausesArr.size);
-      walkSAT(clausesArr);
-      val num = findNumMutualFrds(queryFrdPredict.src1, queryFrdPredict.src2)
-      println(num + "  " + queryFrdPredict.result)
+      println("before access clausesArr size = " + clausesArr.size);
+      walkSAT(clausesArr, clausesMap);
+      // val num = findNumMutualFrds(queryFrdPredict.src1, queryFrdPredict.src2)
+      // println(num + "  " + queryFrdPredict.result)
     }
   }
 
-  def walkSAT(clausesArr: ArrayBuffer[Clause]) = {
+  def walkSAT(clausesArr: ArrayBuffer[Clause], clausesMap: HashMap[(Int, Int), (Clause, Clause)]) = {
+  	// assign randome values to all uncertain nodes
     assignBin(clausesArr);
-    var wrongClausesNum = 1;
+
+    /*
+     * Use frdsMapLocal to try solving salkSAT problem.
+     * For current information in clausesArr, we update the situations in clausesArr.
+     * For examples, if (frd1, frd2) is true now in clausesArr, we make it an edge (frd1, frd2)
+     * in frdsMapLocal as well.
+     */
+    frdsMapLocal = frdsMapGlobal.clone();
+    for(cl<- clausesArr){
+    	val frd1 = cl.pred2.src1;
+    	val frd2 = cl.pred2.src2;
+
+    	if(cl.pred2.result == true){
+    		if(frdsMapLocal(frd1).contains(frd2) == false){
+					frdsMapLocal(frd1) += frd2
+					frdsMapLocal(frd2) += frd1
+    		}
+    	}
+
+    	if(cl.pred2.result == false){
+    		if(frdsMapLocal(frd1).contains(frd2) == true){
+					frdsMapLocal(frd1).remove(frdsMapLocal(frd1).indexOf(frd2))
+					frdsMapLocal(frd2).remove(frdsMapLocal(frd2).indexOf(frd1))
+    		}
+    	}
+
+    }
+
+
+    var wrongClauses = clausesArr.filter { clau => clau.result() == false }
+    var wrongClausesNum = wrongClauses.length;
+
+    // if there still has clauses which is false.
     while (wrongClausesNum > 0) {
 
-      var wrongClauses = clausesArr.filter { clau => clau.result() == false }
-      wrongClauses.foreach { wc =>
-        {
-          if (wc.result() == false) {
-            flip(wc.pred2)
-          }
-        }
-      }
-      wrongClausesNum = wrongClauses.size;
+      val selectedClause = wrongClauses(rand.nextInt(wrongClauses.length));
+      val (frd1, frd2) = (selectedClause.pred2.src1, selectedClause.pred2.src2)
+      
+			/*
+       *---flip FrdPredict
+			 * it returns a value that if the whole graph needs to add to an edge, or remove an edge,
+			 * or we don't need to do anything.
+			 */
+      val returnVal = flip(selectedClause.pred2)
+
+      if(returnVal != 0){
+	      //adjust other clauses, since one edge is missing or added
+		    for(j<-frdsMapLocal(frd1); if j != frd1){
+		    	adjustOtherClause(clausesMap, frd2, frd1, j, returnVal);
+		    }
+		    for(j<-frdsMapLocal(frd2); if j != frd2){
+		    	adjustOtherClause(clausesMap, frd1, frd2, j, returnVal);
+		    }
+    	}
+
+	    wrongClauses = clausesArr.filter { clau => clau.result() == false }
+	    wrongClausesNum = wrongClauses.length;
       println("wrongClausesNum = " + wrongClausesNum);
     }
   }
+
+  def adjustOtherClause(clausesMap: HashMap[(Int, Int), (Clause, Clause)], frdTarget:Int, frdsrc: Int, j: Int, retVal: Int)={
+	  var cl: Clause = null;
+  	if(j> frdsrc){
+  		if(clausesMap.contains((frdsrc, j)))
+  			cl= clausesMap((frdsrc, j))._1;
+  	}
+  	else{
+  		if(clausesMap.contains((j, frdsrc)))
+  			cl= clausesMap((j, frdsrc))._1;
+  	}
+  	if(cl != null){
+  		if(retVal < 0 && frdsMapLocal(j).contains(frdTarget)){
+  			cl.setN(cl.n-1)
+  		}
+   		if(retVal > 0 && frdsMapLocal(j).contains(frdTarget)){
+  			cl.setN(cl.n+1)
+  		}
+  	}
+  }
+
+	/* @return:
+	 * 0 means that frdPredict is not changed.
+	 * 1 means that adding an edge
+	 * -1 means that removing an age.
+	 *
+	 * In this function, src1 always < src2
+	 */
+  def flip(frdPredict: FrdPredict) = if(frdPredict.changeEnable){
+
+		val (src1, src2) = (frdPredict.src1, frdPredict.src2)
+		if(frdPredict.result == true){
+			if(frdsMapLocal(src1).contains(src2)){
+				// println("src1 frds : " + frdsMapGlobal(src1))
+				// println("src2 frds : " + frdsMapGlobal(src2))
+				frdsMapLocal(src1).remove(frdsMapLocal(src1).indexOf(src2))
+				// frdsMapLocal(src2).remove(frdsMapLocal(src1).indexOf(src1))
+			}
+			frdPredict.result = false;
+			-1
+		}
+		else{
+
+			frdsMapLocal(src1) += src2
+			frdsMapLocal(src2) += src1
+			frdPredict.result = true;
+			1
+		}
+	}
+	else 0
+
+
 }

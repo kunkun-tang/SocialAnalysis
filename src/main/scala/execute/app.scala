@@ -118,7 +118,7 @@ object InferApp extends App{
    * frdsPair consist of sample pair of two nodes, which have mutual friend number information.
    * commsPair includes the mutual community number key value.
    */
-  val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
+  // val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
   var (src1, src2) = Util.genTwoSourceNodes(frdsMap);
   if(src1 > src2){
     var temp = src1;

@@ -2,7 +2,7 @@ package object infer {
 
   abstract class Predicate(src1: Int, src2: Int) {
 
-    // result is to differentiate the clause is true or not.
+    // result is to differentiate the predicte is true or not.
     var result: Boolean = false;
   }
 
@@ -26,12 +26,14 @@ package object infer {
   val probCommonFrd: Int => Double = if (datasetName == "DBLP") ProbDBLPCommonFrd else ProbLJCommonFrd
   val probCommonComm: Int => Double = if (datasetName == "DBLP") ProbDBLPCommonComm else ProbLJCommonComm
 
-  class Clause(var pred1: Predicate, var pred2: FrdPredict, val n: Int) {
+  class Clause(var pred1: Predicate, var pred2: FrdPredict, var n: Int) {
     // result is to differentiate the clause is true or not.
     def result(): Boolean = {
       if (probCommonFrd(n) < 0.5) if (pred1.result == true && pred2.result == true) false else true
       else if (pred1.result == true && pred2.result == false) false else true
     }
+
+    def setN(changeN: Int) = n = changeN
   }
 
   /*
