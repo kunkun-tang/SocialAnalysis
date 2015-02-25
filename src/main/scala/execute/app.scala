@@ -145,7 +145,7 @@ object DBLPInferApp extends App{
 
   val conf = ConfigFactory.load
   val datasetName = conf.getString("DataSetName");
-  val (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
+  var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
 
   frdsMap = Util.genFrdsMapFromDB(datasetName)
   /*
