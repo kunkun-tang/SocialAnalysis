@@ -135,7 +135,7 @@ object MCSAT {
        * put in to Constraint set.
        * Besides, it must satisfy the probability that the clause be into the Constraint set.
        */
-      for (frd <- frdsArr) {
+      for (frdPredict <- frdsArr) {
 	      val num = findNumMutualFrdsLocal(frdPredict.src1, frdPredict.src2);
 	      // if(num>0)
 	      //   println(frdPredict.src1 + " " + frdPredict.src2 + " " + num + " "+ probCommonFrd(num) + "  " + computeWeightBasedonNumber(num))
@@ -152,12 +152,14 @@ object MCSAT {
 	      }
 
       }
-
+			println("before walkSAT len = " + clausesArr.filter { clau => clau.result() == false }.length))
       /*
        * After the clausesArr is selected, we then let the arrays run on walkSAT procedure.
        */
       println("before access clausesArr size = " + clausesArr.size);
       walkSAT(clausesArr, clausesMap);
+	    frdsMapGlobal = frdsMapLocal
+
       // val num = findNumMutualFrds(queryFrdPredict.src1, queryFrdPredict.src2)
       // println(num + "  " + queryFrdPredict.result)
     }
@@ -199,7 +201,8 @@ object MCSAT {
     var wrongClausesNum = wrongClauses.length;
 
     // if there still has clauses which is false.
-    while (wrongClausesNum > 0) {
+    var iterWalkSAT = 0
+    while (wrongClausesNum > 0 && iterWalkSAT < conf.getInt("maxWalkSAT")){
 
       val selectedClause = wrongClauses(rand.nextInt(wrongClauses.length));
       val (frd1, frd2) = (selectedClause.pred2.src1, selectedClause.pred2.src2)
@@ -223,7 +226,8 @@ object MCSAT {
 
 	    wrongClauses = clausesArr.filter { clau => clau.result() == false }
 	    wrongClausesNum = wrongClauses.length;
-      println("wrongClausesNum = " + wrongClausesNum);
+      println("iterWalkSAT=" + iterWalkSAT + "  wrongClausesNum = " + wrongClausesNum);
+      iterWalkSAT += 1;
     }
   }
 
@@ -276,6 +280,5 @@ object MCSAT {
 		}
 	}
 	else 0
-
 
 }
