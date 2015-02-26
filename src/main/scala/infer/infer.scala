@@ -66,7 +66,6 @@ object MCSAT {
     val conf = ConfigFactory.load
     println("src1 ="+src1 + " src2="+src2)
 
-
     /*
      * frdsAr can be regarded as a collections of frds pair.
      */
@@ -168,6 +167,7 @@ object MCSAT {
     }
 
     println("If the the two people know each other = " + counter.toFloat/conf.getInt("MCSATSampleNum"))
+    counter.toFloat/conf.getInt("MCSATSampleNum")
   }
 
   def walkSAT(clausesArr: ArrayBuffer[Clause], clausesMap: HashMap[(Int, Int), (Clause, Clause)]) = {
@@ -231,7 +231,7 @@ object MCSAT {
 
 	    wrongClauses = clausesArr.filter { clau => clau.result() == false }
 	    wrongClausesNum = wrongClauses.length;
-	    if(iterWalkSAT % 100 == 0)
+	    if(iterWalkSAT % 2000 == 0)
       	println("iterWalkSAT=" + iterWalkSAT + "  wrongClausesNum = " + wrongClausesNum);
       iterWalkSAT += 1;
     }

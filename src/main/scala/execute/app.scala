@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigFactory
 import preComp._
 import infer._
 import scala.util.Random
+import scala.collection.mutable.ArrayBuffer
 
 /*
  * SocialAnalysis Main function.
@@ -143,6 +144,12 @@ object InferApp extends App{
 
 object DBLPInferApp extends App{
 
+  def findNumMutualFrds(src1: Int, src2: Int, frdsMapGlobal: scala.collection.mutable.Map[Int, ArrayBuffer[Int]]) = {
+    val frds1 = frdsMapGlobal(src1);
+    val frds2 = frdsMapGlobal(src2);
+    frds1.toSet.intersect(frds2.toSet).size
+  }
+
   val conf = ConfigFactory.load
   val datasetName = conf.getString("DataSetName");
   var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
@@ -159,6 +166,7 @@ object DBLPInferApp extends App{
     src1 = src2
     src2 = temp;
   }
+  val numMutualActualFrds = findNumMutualFrds(src1, src2, frdsMap);
 
   val localGraph = RWM.apply(frdsMap, backBone)(src1)
   val localGraph2 = RWM.apply(frdsMap, backBone)(src2)
@@ -172,5 +180,58 @@ object DBLPInferApp extends App{
   // }
   println("inferFrdsMap.contains(src1) = " + inferFrdsMap.contains(src1))
   println("inferFrdsMap.contains(src2) = " + inferFrdsMap.contains(src2))
-  MCSAT(inferFrdsMap,commsMap)(src1,src2)
+  val prob = MCSAT(inferFrdsMap,commsMap)(src1,src2)
+
+  println(" actual num mutual frds = " + numMutualActualFrds);
+}
+
+
+object DBLPTruePositive extends App{
+
+  def findNumMutualFrds(src1: Int, src2: Int, frdsMapGlobal: scala.collection.mutable.Map[Int, ArrayBuffer[Int]]) = {
+    val frds1 = frdsMapGlobal(src1);
+    val frds2 = frdsMapGlobal(src2);
+    frds1.toSet.intersect(frds2.toSet).size
+  }
+
+  val conf = ConfigFactory.load
+  val datasetName = conf.getString("DataSetName");
+  var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
+
+  frdsMap = Util.genFrdsMapFromDB(datasetName)
+
+  /*
+   * frdsPair consist of sample pair of two nodes, which have mutual friend number information.
+   * commsPair includes the mutual community number key value.
+   */
+  // val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
+
+  // resultMap collects every source node pair, [(src1, src2), (probability, numMutualFrds)]
+  val resultMap = scala.collection.mutable.HashMap[(Int, Int), (Double, Int)]();
+  for(i <- 1 to 50){
+    val frdsMapLocal = frdsMap.clone();
+    var (src1, src2) = Util.genTwoKnownSrcFromDB(datasetName);
+    if(src1 > src2){
+      var temp = src1;
+      src1 = src2
+      src2 = temp;
+    }
+    val numMutualActualFrds = findNumMutualFrds(src1, src2, frdsMapLocal);
+
+    val localGraph = RWM.apply(frdsMapLocal, backBone)(src1)
+    val localGraph2 = RWM.apply(frdsMapLocal, backBone)(src2)
+    val fiveSet = localGraph ++ localGraph2  ++ backBone
+
+    /*
+     * inferFrdsMap is the final fiveSet frdsMapLocal.
+     */
+    val inferFrdsMap = Util.prune(frdsMapLocal, fiveSet);
+    println("fiveSet size = " + inferFrdsMap.size)
+
+    val prob = MCSAT(inferFrdsMap,commsMap)(src1,src2)
+
+    println(" actual num mutual frds = " + numMutualActualFrds);
+    resultMap += (src1, src2) -> (prob, numMutualActualFrds);
+  }
+  println(resultMap);
 }

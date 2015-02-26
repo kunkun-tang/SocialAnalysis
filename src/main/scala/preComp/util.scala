@@ -5,7 +5,6 @@ import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import scala.collection.mutable.Map
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.Set
 import scala.util.control.Breaks._
 
@@ -50,6 +49,38 @@ object Util {
     src2 = doc2.get("_id").toString.toInt;
 
     (src1, src2)
+  }
+
+  /*
+   * get two source nodes from MongoDB.
+   */
+  def genTwoKnownSrcFromDB(dataSetName: String) = {
+
+    import com.mongodb.casbah.Imports._
+    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val db = mongoClient(dataSetName+ "Split")
+    val coll = db("test");
+
+    val docuSize = coll.find().size;
+    val doc1 = coll.find().limit(-1).skip(rand.nextInt(docuSize)).next();
+
+    val k = doc1.toList(1)._1;
+    val v = doc1.as[MongoDBList](k).toList; 
+    val aFunction = new PartialFunction[Any, Int] {
+      def apply(d: Any) = d match{
+        case a: Int => a
+      }
+      def isDefinedAt(d: Any) = d match{
+        case a: Int => true
+        case _ => false
+      }
+    }
+
+    val src1FrdList = v.collect(aFunction).to[ArrayBuffer];
+
+    val src2 = src1FrdList(rand.nextInt(src1FrdList.length));
+
+    (k.toInt, src2)
   }
 
   /*
