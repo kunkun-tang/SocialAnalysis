@@ -20,7 +20,7 @@ object Split {
     import org.apache.commons.io.LineIterator;
     import org.apache.commons.io.FileUtils;
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
 
     val db = mongoClient(dataSetName+"Split")
     val coll = db("train");
