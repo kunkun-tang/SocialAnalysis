@@ -99,20 +99,22 @@ object MCSAT {
     var clausesArr = new ArrayBuffer[Clause]();
     var clausesMap = new HashMap[(Int, Int), (Clause, Clause)]();
 
+    // Before MC-SAT loop starts, all clauses must be put into walkSAT.
     for (frdPredict <- frdsArr) {
       val num = findNumMutualFrds(frdPredict.src1, frdPredict.src2);
       // if(num>0)
       //   println(frdPredict.src1 + " " + frdPredict.src2 + " " + num + " "+ probCommonFrd(num) + "  " + computeWeightBasedonNumber(num))
-      if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
-      	if( (probCommonFrd(num) >= 0.5 && frdPredict.result == true) || 
-      			(probCommonFrd(num) < 0.5 && frdPredict.result == false) ){
+
+      // if (num > 0 && rand.nextDouble() < computeWeightBasedonNumber(num)) {
+      // 	if( (probCommonFrd(num) >= 0.5 && frdPredict.result == true) || 
+      // 			(probCommonFrd(num) < 0.5 && frdPredict.result == false) ){
 	        val pred1 = MutualFrd(num, frdPredict.src1, frdPredict.src2);
 	        pred1.result = true;
 	        val aClause = new Clause(pred1, frdPredict, num);
 	        clausesArr.append(aClause);
 	        clausesMap += (frdPredict.src1, frdPredict.src2) -> (aClause, null)
-      	}
-      }
+      // 	}
+      // }
     }
 
     println("before access clausesArr size = " + clausesArr.size);
