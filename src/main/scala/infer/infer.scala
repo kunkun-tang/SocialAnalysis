@@ -176,6 +176,7 @@ object MCSAT {
   	// assign randome values to all uncertain nodes
     assignBin(clausesArr);
 
+    println("access walkSAT num: " + clausesArr.length)
     /*
      * Use frdsMapLocal to try solving salkSAT problem.
      * For current information in clausesArr, we update the situations in clausesArr.
@@ -190,6 +191,7 @@ object MCSAT {
     	if(cl.pred2.result == true){
     		if(frdsMapLocal(frd1).contains(frd2) == false){
 					frdsMapLocal(frd1) += frd2
+          if(frdsMapLocal(frd2) == null) frdsMapLocal(frd2) = ArrayBuffer[Int]()
 					frdsMapLocal(frd2) += frd1
     		}
     	}
@@ -197,6 +199,7 @@ object MCSAT {
     	if(cl.pred2.result == false){
     		if(frdsMapLocal(frd1).contains(frd2) == true){
 					frdsMapLocal(frd1).remove(frdsMapLocal(frd1).indexOf(frd2))
+          if(frdsMapLocal(frd2) != null)
 					frdsMapLocal(frd2).remove(frdsMapLocal(frd2).indexOf(frd1))
     		}
     	}
@@ -274,12 +277,15 @@ object MCSAT {
 				// println("src1 frds : " + frdsMapGlobal(src1))
 				// println("src2 frds : " + frdsMapGlobal(src2))
 				frdsMapLocal(src1).remove(frdsMapLocal(src1).indexOf(src2))
-				// frdsMapLocal(src2).remove(frdsMapLocal(src1).indexOf(src1))
+        if(frdsMapLocal(src2)!= null && frdsMapLocal(src2).contains(src1))
+				  frdsMapLocal(src2).remove(frdsMapLocal(src2).indexOf(src1))
 			}
 			frdPredict.result = false;
 			-1
 		}
 		else{
+      if(frdsMapLocal(src1) == null) frdsMapLocal(src1) = ArrayBuffer[Int]()
+      if(frdsMapLocal(src2) == null) frdsMapLocal(src2) = ArrayBuffer[Int]()
 
 			frdsMapLocal(src1) += src2
 			frdsMapLocal(src2) += src1
