@@ -250,6 +250,14 @@ object PreMain {
     import org.apache.commons.io.LineIterator;
     import org.apache.commons.io.FileUtils;
     import com.mongodb.casbah.Imports._
+    import javax.net.SocketFactory;
+
+    import com.mongodb.casbah.MongoClientOptions._;
+
+    val Socket = new SocketFactory()
+
+    val options = new Builder().connectionsPerHost(10).build();
+
     val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
 
     val db = mongoClient(dataSetName+"Split")
