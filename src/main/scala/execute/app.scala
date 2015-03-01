@@ -131,9 +131,9 @@ object InferApp extends App{
   val localGraph2 = RWM.apply(frdsMap, backBone)(src2)
   val fiveSet = localGraph ++ localGraph2  ++ backBone
 
-  /*
-   * inferFrdsMap is the final fiveSet frdsMap.
-   */
+  
+  // inferFrdsMap is the final fiveSet frdsMap.
+   
   val inferFrdsMap = Util.prune(frdsMap, fiveSet);
   println("fiveSet size = " + inferFrdsMap.size)
   // }
@@ -228,10 +228,10 @@ object DBLPTruePositive extends App{
     val inferFrdsMap = Util.prune(frdsMapLocal, fiveSet);
     println("fiveSet size = " + inferFrdsMap.size)
 
-    val prob = MCSAT(inferFrdsMap,commsMap)(src1,src2)
+    val prob = MCSAT(inferFrdsMap, commsMap)(src1, src2)
 
     println(" actual num mutual frds = " + numMutualActualFrds);
-    resultMap += (src1, src2) -> (prob, numMutualActualFrds);
+    resultMap += (src1, src2)->(prob, numMutualActualFrds);
   }
   println(resultMap);
 }

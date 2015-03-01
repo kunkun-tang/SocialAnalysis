@@ -254,7 +254,7 @@ object PreMain {
 
     import com.mongodb.casbah.MongoClientOptions._;
 
-    val Socket = new SocketFactory()
+    // val Socket = new SocketFactory()
 
     val options = new Builder().connectionsPerHost(10).build();
 
