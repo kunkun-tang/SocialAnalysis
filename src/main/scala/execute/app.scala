@@ -189,9 +189,15 @@ object DBLPInferApp extends App{
 object DBLPTruePositive extends App{
 
   def findNumMutualFrds(src1: Int, src2: Int, frdsMapGlobal: scala.collection.mutable.Map[Int, ArrayBuffer[Int]]) = {
-    val frds1 = frdsMapGlobal(src1);
-    val frds2 = frdsMapGlobal(src2);
-    frds1.toSet.intersect(frds2.toSet).size
+    var ret = 1;
+    if(frdsMapGlobal.contains(src1) == false || frdsMapGlobal(src1) == null) ret = -1;
+    if(frdsMapGlobal.contains(src2) == false || frdsMapGlobal(src2) == null) ret = -1;
+    if(ret == -1) -1
+    else{
+      val frds1 = frdsMapGlobal(src1);
+      val frds2 = frdsMapGlobal(src2);
+      frds1.toSet.intersect(frds2.toSet).size
+    }
   }
 
   val conf = ConfigFactory.load
@@ -208,7 +214,7 @@ object DBLPTruePositive extends App{
 
   // resultMap collects every source node pair, [(src1, src2), (probability, numMutualFrds)]
   val resultMap = scala.collection.mutable.HashMap[(Int, Int), (Double, Int)]();
-  for(i <- 1 to 50){
+  for(i <- 1 to conf.getInt("SampleLIMIT")){
     val frdsMapLocal = frdsMap.clone();
     var (src1, src2) = Util.genTwoKnownSrcFromDB(datasetName);
     if(src1 > src2){
@@ -217,21 +223,33 @@ object DBLPTruePositive extends App{
       src2 = temp;
     }
     val numMutualActualFrds = findNumMutualFrds(src1, src2, frdsMapLocal);
+    if(numMutualActualFrds >= 0){
+      val localGraph = RWM.apply(frdsMapLocal, backBone)(src1)
+      val localGraph2 = RWM.apply(frdsMapLocal, backBone)(src2)
+      val fiveSet = localGraph ++ localGraph2  ++ backBone
 
-    val localGraph = RWM.apply(frdsMapLocal, backBone)(src1)
-    val localGraph2 = RWM.apply(frdsMapLocal, backBone)(src2)
-    val fiveSet = localGraph ++ localGraph2  ++ backBone
+      /*
+       * inferFrdsMap is the final fiveSet frdsMapLocal.
+       */
+      val inferFrdsMap = Util.prune(frdsMapLocal, fiveSet);
+      println("fiveSet size = " + inferFrdsMap.size)
 
-    /*
-     * inferFrdsMap is the final fiveSet frdsMapLocal.
-     */
-    val inferFrdsMap = Util.prune(frdsMapLocal, fiveSet);
-    println("fiveSet size = " + inferFrdsMap.size)
+      val prob = MCSAT(inferFrdsMap, commsMap)(src1, src2)
 
-    val prob = MCSAT(inferFrdsMap, commsMap)(src1, src2)
-
-    println(" actual num mutual frds = " + numMutualActualFrds);
-    resultMap += (src1, src2)->(prob, numMutualActualFrds);
+      println(" actual num mutual frds = " + numMutualActualFrds);
+      resultMap += (src1, src2)->(prob, numMutualActualFrds);
+    }
   }
+
+  def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+    val p = new java.io.PrintWriter(f)
+    try { op(p) } finally { p.close() }
+  }
+
+  printToFile(new java.io.File("result.txt"))(p => {
+    resultMap.foreach(res => p.println( " src1 and src2 = " + res._1._1 + " "+ res._1._2 + "\t" + " mutual Frd num="
+    + res._2._2 +  "\t" + " prob =" +  res._2._1))
+  })
+
   println(resultMap);
 }

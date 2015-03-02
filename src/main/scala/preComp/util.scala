@@ -174,13 +174,13 @@ object Util {
 
     /*
      * keepSet collects nodes id which is remained in the fiveSet, and we should keep them
-     * in the final frdsMap. Then, we filter out all nodes which is not in fiveSet.
+     * in the final frdsMap. Then, we filter out all key nodes which is not in fiveSet.
      */
     var frdsMap = aMap.filter{ case (k,v) => keepSet.contains(k) == true};
-    for( (k,v)<-frdsMap) {
-      val replaceV = v.filter{ case elem:Int => keepSet.contains(elem) == true};
-      frdsMap(k) = replaceV;
-    }
+    // for( (k,v)<-frdsMap) {
+    //   val replaceV = v.filter{ case elem:Int => keepSet.contains(elem) == true};
+    //   frdsMap(k) = replaceV;
+    // }
     frdsMap
   }
   
