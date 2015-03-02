@@ -72,7 +72,7 @@ object MCSAT {
       else
         frdsRelation += (i1, j1) -> (true, genRandomBoolean)
     }
-
+    frdsMapLocal = frdsMapGlobal.clone();
     /*
      * The MC-SAT sample loop starts from 1 to a sample upper limit.
      */
@@ -154,7 +154,7 @@ object MCSAT {
      * For examples, if (frd1, frd2) is true now in clausesArr, we make it an edge (frd1, frd2)
      * in frdsMapLocal as well.
      */
-    val frdsMapLocal = frdsMapGlobal.clone();
+    frdsMapLocal = frdsMapGlobal.clone();
     for( (k,v)<- frdsRelation){
     	val frd1 = k._1;
     	val frd2 = k._2;
@@ -178,68 +178,20 @@ object MCSAT {
 
 
     var wrongClauses = clausesArr.filter { clau => clau.result == false }
-    var wrongClausesNum = wrongClauses.length;
 
-    // if there still has clauses which is false.
-    var iterWalkSAT = 0
-    while (wrongClausesNum > 0 && iterWalkSAT < conf.getInt("maxWalkSAT")){
-
-      val selectedClause = wrongClauses(rand.nextInt(wrongClauses.length));
-      val (frd1, frd2) = (selectedClause.getPred2.src1, selectedClause.getPred2.src2)
-      
-			/*
-       *---flip FrdPredict
-			 * it returns a value that if the whole graph needs to add to an edge, or remove an edge,
-			 * or we don't need to do anything.
-			 */
-      val returnVal = flip(selectedClause.getPred2)
-
-      /*
-       * Adjust other clauses, since one edge is missing or added
-       * We let the (frd1. frd2) is the edge affected. j is frd1's friend.
-       * if (frd1, frd2) is deleted after flip, the mutual frds number between j and frd1
-       * might be changed.
-       */
-	    for(j<-frdsMapLocal(frd1); if j != frd1){
-	    	adjustFrdClause(clausesMap, frd2, frd1, j, returnVal);
-	    }
-
-	    for(j<-frdsMapLocal(frd2); if j != frd2){
-	    	adjustFrdClause(clausesMap, frd1, frd2, j, returnVal);
-	    }
-
-	    wrongClauses = clausesArr.filter { clau => clau.result == false }
-	    wrongClausesNum = wrongClauses.length;
-	    if(iterWalkSAT % 2000 == 0)
-      	println("iterWalkSAT=" + iterWalkSAT + "  wrongClausesNum = " + wrongClausesNum);
-      iterWalkSAT += 1;
+    wrongClauses.foreach { wc =>
+      {
+        if (wc.result == false) {
+          flip(wc.getPred2)
+        }
+      }
     }
-  }
-
-  // In this function, we focus on the mutual frds number betweeb frdsrc and j.
-  // Because comm relationship doesn't rely on the the mutual frds number, it is not affected.
-  def adjustFrdClause(clausesMap: HashMap[(Int, Int), (Clause, Clause)], frdTarget:Int, frdsrc: Int, j: Int, retVal: Int)={
-	  var cl: Clause = null;
-  	if(j> frdsrc){
-  		if(clausesMap.contains((frdsrc, j)))
-  			cl= clausesMap((frdsrc, j))._1;
-  	}
-  	else{
-  		if(clausesMap.contains((j, frdsrc)))
-  			cl= clausesMap((j, frdsrc))._1;
-  	}
-  	if(cl != null){
-  		if(retVal < 0 && frdsMapLocal(j).contains(frdTarget)){
-  			cl.setN(cl.getN-1)
-  		}
-   		if(retVal > 0 && frdsMapLocal(j).contains(frdTarget)){
-  			cl.setN(cl.getN+1)
-  		}
-  	}
+    val wrongClausesNum = clausesArr.filter { clau => clau.result == false }.size;
+    println("After walkSAT wrongClausesNum = " + wrongClausesNum);
   }
 
 	/* @return:
-	 * 0 means that frdPredict is not changed.
+	 * 0 means that frdPredict is not changed. (Deprecated, since I only put changeable clauses here)
 	 * 1 means that adding an edge
 	 * -1 means that removing an age.
 	 *
