@@ -35,7 +35,7 @@ object Util {
   def genTwoSrcFromDB(dataSetName: String) = {
 
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
     val db = mongoClient(dataSetName+ "Split")
     val coll = db("test");
 
@@ -57,7 +57,7 @@ object Util {
   def genTwoKnownSrcFromDB(dataSetName: String) = {
 
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
     val db = mongoClient(dataSetName+ "Split")
     val coll = db("test");
 
@@ -91,7 +91,7 @@ object Util {
     val frdsMap = scala.collection.mutable.Map[Int, ArrayBuffer[Int]]()
 
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
     val db = mongoClient(dataSetName+"Split")
     val coll = db("train");
 

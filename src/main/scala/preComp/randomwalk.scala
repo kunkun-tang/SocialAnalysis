@@ -43,7 +43,7 @@ object RWM {
   def applyDB(backBone: scala.collection.Set[Int])(src: Int, dataSetName: String) = {
 
     import com.mongodb.casbah.Imports._
-    val mongoClient = MongoClient("localhost", conf.getInt("MongoDBPort"))
+    val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
     val db = mongoClient(dataSetName)
     val coll = db("liang");
 

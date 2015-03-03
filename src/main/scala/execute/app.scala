@@ -249,6 +249,7 @@ object DBLPTruePositive extends App{
   printToFile(new java.io.File("result.txt"))(p => {
     resultMap.foreach(res => p.println( " src1 and src2 = " + res._1._1 + " "+ res._1._2 + "\t" + " mutual Frd num="
     + res._2._2 +  "\t" + " prob =" +  res._2._1))
+    p.println("true positive number = " + resultMap.foldLeft(0.0)((add, kv) => add + kv._2._1) )
   })
 
   println(resultMap);
