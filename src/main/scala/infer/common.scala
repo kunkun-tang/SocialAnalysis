@@ -1,9 +1,11 @@
 package object infer {
+  
+  import scala.collection.mutable.HashMap
 
   abstract class Predicate(src1: Int, src2: Int) {
 
     // result is to differentiate the predicte is true or not.
-    var result: Boolean = false;
+    var result: Boolean = true;
   }
 
   // MutualFrd and MutualComm are the predicates at the left side.
@@ -11,7 +13,16 @@ package object infer {
   case class MutualComm(numMutualComms: Int, src1: Int, src2: Int) extends Predicate(src1, src2)
 
   // FrdPredict is the predicate at the right side.
-  case class FrdPredict(src1: Int, src2: Int, changeEnable: Boolean) extends Predicate(src1, src2)
+  class FrdPredict(src1: Int, src2: Int, frdsRelation: HashMap[(Int, Int), (Boolean, Boolean)]) extends Predicate(src1, src2){
+    
+    def getSrc1 = src1
+    def getSrc2 = src2
+    def getResult = result
+
+    def setResult(re: Boolean) = result = re
+
+    def ifKnow = frdsRelation((src1, src2))._2
+  }
 
   val lnOf2 = math.log(2)
 
@@ -45,10 +56,10 @@ package object infer {
   class FrdClause(pred1: Predicate, pred2: FrdPredict, var n: Int) extends Clause{
     
     def result: Boolean = if(probCommonFrd(n) < 0.5){
-      if (pred1.result == true && pred2.result == true) false else true
+      if (pred1.result == true && pred2.ifKnow == true) false else true
     }
     else{
-      if (pred1.result == true && pred2.result == false) false else true
+      if (pred1.result == true && pred2.ifKnow == false) false else true
     }
 
     def setN(changeN: Int) = n = changeN
@@ -59,10 +70,10 @@ package object infer {
   class CommClause( pred1: Predicate, pred2: FrdPredict, var n: Int) extends Clause{
 
     def result: Boolean = if(probCommonComm(n) < 0.5){
-      if (pred1.result == true && pred2.result == true) false else true
+      if (pred1.result == true && pred2.ifKnow == true) false else true
     }
     else{
-      if (pred1.result == true && pred2.result == false) false else true
+      if (pred1.result == true && pred2.ifKnow == false) false else true
     }
 
     def setN(changeN: Int) = n = changeN
