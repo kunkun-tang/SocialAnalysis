@@ -26,7 +26,7 @@ package object infer {
 
   val lnOf2 = math.log(2)
 
-  def ProbDBLPCommonFrd(numMutualFrd: Int) = 0.3545 * math.log(numMutualFrd) / lnOf2 + 0.0279
+  def ProbDBLPCommonFrd(numMutualFrd: Int) = 0.3545 * math.log(numMutualFrd) + 0.0279
   def ProbLJCommonFrd(numMutualFrd: Int) = 0.0084 * math.pow(numMutualFrd, 1.0222)
 
   def ProbDBLPCommonComm(numMutualComm: Int) = 0.0012 * math.pow(numMutualComm, 1.766)

@@ -156,7 +156,7 @@ object MCSAT {
     }
 
     println("If the the two people know each other = " + counter.toFloat/conf.getInt("MCSATSampleNum"))
-    counter.toFloat/conf.getInt("MCSATSampleNum")
+    (counter.toFloat/conf.getInt("MCSATSampleNum"), probCommonFrd(findNumMutualFrdsLocal(src1, src2)));
   }
 
   def walkSAT(clausesArr: ArrayBuffer[Clause], clausesMap: HashMap[(Int, Int), (Clause, Clause)]) = {

@@ -200,6 +200,19 @@ object DBLPTruePositive extends App{
     }
   }
 
+  def findNumMutualComms(src1: Int, src2: Int, commsMap: scala.collection.mutable.Map[Int, ArrayBuffer[Int]]): Int = {
+    var ret = 1;
+    if(commsMap.contains(src1) == false || commsMap(src1) == null) ret = 0;
+    if(commsMap.contains(src2) == false || commsMap(src2) == null) ret = 0;
+    if( ret == 0) 0
+    else{
+      val comm1 = commsMap(src1);
+      val comm2 = commsMap(src2);
+      // println(comm1 + " " + comm2)
+      comm1.toSet.intersect(comm2.toSet).size
+    }
+  }
+
   val conf = ConfigFactory.load
   val datasetName = conf.getString("DataSetName");
   var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
@@ -212,8 +225,9 @@ object DBLPTruePositive extends App{
    */
   // val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
 
-  // resultMap collects every source node pair, [(src1, src2), (probability, numMutualFrds)]
-  val resultMap = scala.collection.mutable.HashMap[(Int, Int), (Double, Int)]();
+  // resultMap collects every source node pair, [(src1, src2), (probability, Baseline, numMutualFrds, numMutualComm)]
+  val resultMap = scala.collection.mutable.HashMap[(Int, Int), (Double, Double, Int, Int)]();
+  var count =0; var additionProbSAT = 0.0; var additionProbBaseline=0.0;
   for(i <- 1 to conf.getInt("SampleLIMIT")){
     val frdsMapLocal = frdsMap.clone();
     var (src1, src2) = Util.genTwoKnownSrcFromDB(datasetName);
@@ -223,6 +237,8 @@ object DBLPTruePositive extends App{
       src2 = temp;
     }
     val numMutualActualFrds = findNumMutualFrds(src1, src2, frdsMapLocal);
+    val numMutualActualComm = findNumMutualComms(src1, src2, commsMap);
+
     if(numMutualActualFrds >= 0){
       val localGraph = RWM.apply(frdsMapLocal, backBone)(src1)
       val localGraph2 = RWM.apply(frdsMapLocal, backBone)(src2)
@@ -234,10 +250,13 @@ object DBLPTruePositive extends App{
       val inferFrdsMap = Util.prune(frdsMapLocal, fiveSet);
       println("fiveSet size = " + inferFrdsMap.size)
 
-      val prob = MCSAT(inferFrdsMap, commsMap)(src1, src2)
+      val (probSAT, probBaseline) = MCSAT(inferFrdsMap, commsMap)(src1, src2)
 
       println(" actual num mutual frds = " + numMutualActualFrds);
-      resultMap += (src1, src2)->(prob, numMutualActualFrds);
+      resultMap += (src1, src2)->(probSAT, probBaseline, numMutualActualFrds, numMutualActualComm);
+      count += 1;
+      additionProbBaseline += (1-probBaseline)*(1-probBaseline);
+      additionProbSAT += (1-probSAT)*(1-probSAT);
     }
   }
 
@@ -247,9 +266,11 @@ object DBLPTruePositive extends App{
   }
 
   printToFile(new java.io.File("result.txt"))(p => {
-    resultMap.foreach(res => p.println( " src1 and src2 = " + res._1._1 + " "+ res._1._2 + "\t" + " mutual Frd num="
-    + res._2._2 +  "\t" + " prob =" +  res._2._1))
-    p.println("true positive number = " + resultMap.foldLeft(0.0)((add, kv) => add + kv._2._1) )
+    resultMap.foreach(res => p.println( "src1 and src2 = " + res._1._1 + "\t"+ res._1._2 + "\t" + " probSAT =" +  res._2._1
+    +"\t" + " probBaseline =" +  res._2._2 + "\t"  + " mutual Frd num=" + res._2._3 +  "\t" + " mutual Comm num=" + res._2._4))
+    p.println("additionProbBaseline sqrt = " + scala.math.sqrt(additionProbBaseline/count) )
+    p.println("additionProbSAT sqrt = " + scala.math.sqrt(additionProbSAT/count) )
+  
   })
 
   println(resultMap);
