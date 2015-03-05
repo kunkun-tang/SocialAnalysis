@@ -111,13 +111,13 @@ object MCSAT {
 
       for((k,v) <- frdsRelation){
         val num = findNumMutualFrdsLocal(k._1, k._2);
-        if(num > 4 && first==true && v._1 == true){
-          testFrd1 = k._1; testFrd2 = k._2; first = false;
-        }
+        // if(num > 3 && k._1 == src1 && k._2 == src2 && first == true){
+        //   testFrd1 = k._1; testFrd2 = k._2; first = false;
+        // }
         val probFromFrdCurve = probCommonFrd(num);
-        if(k._1 == testFrd1 && k._2 == testFrd2){
-          println("num =" + num + " boolean=" + v._2)
-        }
+        // if(k._1 == testFrd1 && k._2 == testFrd2){
+        //   println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num))
+        // }
         if (v._1 == true && v._2==true && num > 0 && rand.nextDouble() < computeWeightFrd(num)) {
           // println("num =" + num + " access");
           if( (probFromFrdCurve >= 0.5 && v._2 == true) || 
@@ -133,26 +133,26 @@ object MCSAT {
           }
         }
 
-        val numComm = findNumMutualComms(k._1, k._2);
-        val probFromCommCurve = probCommonComm(numComm);
-        if (v._1 == true && num > 0 && rand.nextDouble() < computeWeightComm(numComm)) {
-          if( (probFromCommCurve >= 0.5 && v._2 == true) || 
-              (probFromCommCurve < 0.5 && v._2 == false) ){
+        // val numComm = findNumMutualComms(k._1, k._2);
+        // val probFromCommCurve = probCommonComm(numComm);
+        // if (v._1 == true && num > 0 && rand.nextDouble() < computeWeightComm(numComm)) {
+        //   if( (probFromCommCurve >= 0.5 && v._2 == true) || 
+        //       (probFromCommCurve < 0.5 && v._2 == false) ){
 
-            val pred1 = MutualComm(numComm, k._1, k._2);
-            pred1.result = true;
-            val pred2 = new FrdPredict(k._1, k._2, frdsRelation);
-            pred2.result = v._2;
-            val aClause = new CommClause(pred1, pred2, num);
-            clausesArr.append(aClause);
-            if(clausesMap.contains( (k._1, k._2) ) == false) 
-              clausesMap += (k._1, k._2) -> (null, aClause)
-            else{
-              val (v1, v2) = clausesMap( (k._1, k._2) );
-              clausesMap += (k._1, k._2) -> (v1, aClause);
-            }
-          }
-        }
+        //     val pred1 = MutualComm(numComm, k._1, k._2);
+        //     pred1.result = true;
+        //     val pred2 = new FrdPredict(k._1, k._2, frdsRelation);
+        //     pred2.result = v._2;
+        //     val aClause = new CommClause(pred1, pred2, num);
+        //     clausesArr.append(aClause);
+        //     if(clausesMap.contains( (k._1, k._2) ) == false) 
+        //       clausesMap += (k._1, k._2) -> (null, aClause)
+        //     else{
+        //       val (v1, v2) = clausesMap( (k._1, k._2) );
+        //       clausesMap += (k._1, k._2) -> (v1, aClause);
+        //     }
+        //   }
+        // }
       }
 
       /*
@@ -161,18 +161,26 @@ object MCSAT {
       // println("before access clausesArr size = " + clausesArr.size);
       walkSAT(clausesArr, clausesMap);
 
+      // if(testFrd1 != -1)
+      //   println("after walkSAT the value=" + frdsRelation((testFrd1, testFrd2)) );
       if(frdsRelation((src1,src2))._2 == true ) counter += 1
     }
-
+    first = true;
+    testFrd1 = -1; testFrd2 = -1;
     println("If the the two people know each other = " + counter.toFloat/conf.getInt("MCSATSampleNum"))
-    (counter.toFloat/conf.getInt("MCSATSampleNum"), probCommonFrd(findNumMutualFrdsLocal(src1, src2)));
+    val numMutualFrds = findNumMutualFrdsLocal(src1, src2);
+    if(numMutualFrds == 0)
+      (counter.toFloat/conf.getInt("MCSATSampleNum"), 0.0);
+    else 
+      (counter.toFloat/conf.getInt("MCSATSampleNum"), probCommonFrd(numMutualFrds));
   }
 
   def walkSAT(clausesArr: ArrayBuffer[Clause], clausesMap: HashMap[(Int, Int), (Clause, Clause)]) = {
   	// assign randome values to all uncertain nodes
     assignBin(frdsRelation);
 
-    println("in walkSAT the value=" + frdsRelation((testFrd1, testFrd2)) );
+    // if(testFrd1 != -1)
+    //   println("in walkSAT the value=" + frdsRelation((testFrd1, testFrd2)) );
     /*
      * Use frdsMapLocal to try solving salkSAT problem.
      * For current information in clausesArr, we update the situations in clausesArr.
@@ -204,8 +212,12 @@ object MCSAT {
 	 */
   def flip(frdPredict: FrdPredict) = {
 
+		val (src1, src2) = (frdPredict.getSrc1, frdPredict.getSrc2);
 
-		val (src1, src2) = (frdPredict.getSrc1, frdPredict.getSrc2)
+    // if(src1 == testFrd1 && src2 == testFrd2){
+    //   println("ifknow = " + frdPredict.ifKnow);
+    // }
+
 		if(frdPredict.ifKnow == true){
 			frdPredict.setResult(false);
       if(src1 < src2) frdsRelation.update( (src1, src2), (true, false) );
