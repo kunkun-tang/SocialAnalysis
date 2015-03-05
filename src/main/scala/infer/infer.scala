@@ -60,6 +60,7 @@ object MCSAT {
     }
   }
 
+  var testFrd1 = -1; var testFrd2 = -1;
   /*
    * frdsMap is (userID, ArrayBuffer(userID_63, userID_22, ...)) 
         ArrayBuffer is userID's friends list.
@@ -87,6 +88,9 @@ object MCSAT {
         frdsRelation += (i1, j1) -> (true, genRandomBoolean)
     }
     frdsMapLocal = frdsMapGlobal.clone();
+
+
+    var first: Boolean= true;
     /*
      * The MC-SAT sample loop starts from 1 to a sample upper limit.
      */
@@ -107,9 +111,14 @@ object MCSAT {
 
       for((k,v) <- frdsRelation){
         val num = findNumMutualFrdsLocal(k._1, k._2);
+        if(num > 4 && first==true && v._1 == true){
+          testFrd1 = k._1; testFrd2 = k._2; first = false;
+        }
         val probFromFrdCurve = probCommonFrd(num);
-
-        if (v._1 == true && num > 0 && rand.nextDouble() < computeWeightFrd(num)) {
+        if(k._1 == testFrd1 && k._2 == testFrd2){
+          println("num =" + num + " boolean=" + v._2)
+        }
+        if (v._1 == true && v._2==true && num > 0 && rand.nextDouble() < computeWeightFrd(num)) {
           // println("num =" + num + " access");
           if( (probFromFrdCurve >= 0.5 && v._2 == true) || 
               (probFromFrdCurve < 0.5 && v._2 == false) ){
@@ -163,6 +172,7 @@ object MCSAT {
   	// assign randome values to all uncertain nodes
     assignBin(frdsRelation);
 
+    println("in walkSAT the value=" + frdsRelation((testFrd1, testFrd2)) );
     /*
      * Use frdsMapLocal to try solving salkSAT problem.
      * For current information in clausesArr, we update the situations in clausesArr.
