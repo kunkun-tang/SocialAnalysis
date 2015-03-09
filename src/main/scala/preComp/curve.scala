@@ -24,7 +24,7 @@ object CurveMutualFrds{
      * The blow block make the frdsRelationship have the double-direction map.
      */
     val mutFrdsRelationship = Map[Int, (Int, Int)]();
-    for(i<- 1 to 10000) mutFrdsRelationship += i -> (0,0)
+    for(i<- 0 to 10000) mutFrdsRelationship += i -> (0,0)
 
     val totalP = frdsMap.size;
     var loopCount = 0;
@@ -36,7 +36,7 @@ object CurveMutualFrds{
 
         if(rand.nextDouble()<1){
           val num = findNumMutualFrds(v1, v2)
-          if(num>0){
+          if(num>=0){
             val (tup1, tup2) = mutFrdsRelationship(num)
             if(v1.contains(k2)){
               // println(k1 + " " + k2)

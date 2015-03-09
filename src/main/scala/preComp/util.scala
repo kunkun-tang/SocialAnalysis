@@ -84,6 +84,61 @@ object Util {
   }
 
   /*
+   * get two source nodes who are unknown each other from MongoDB.
+   * 1. First find two unknown persons in train dataset, and 
+   * 2. then check if they known each other in test dataset.
+   */
+  def genTwoUnknownSrcFromDB(dataSetName: String) = {
+
+    import com.mongodb.casbah.Imports._
+    val mongoClient = MongoClient(conf.getString("MongoDBHost"), conf.getInt("MongoDBPort"))
+    val db = mongoClient(dataSetName+ "Split")
+    val coll = db("train");
+
+    val docuSize = coll.find().size;
+    val doc1 = coll.find().limit(-1).skip(rand.nextInt(docuSize)).next();
+
+    val k = doc1.toList(1)._1;
+    val v = doc1.as[MongoDBList](k).toList; 
+    val aFunction = new PartialFunction[Any, Int] {
+      def apply(d: Any) = d match{
+        case a: Int => a
+      }
+      def isDefinedAt(d: Any) = d match{
+        case a: Int => true
+        case _ => false
+      }
+    }
+
+    val src1FrdList = v.collect(aFunction).to[ArrayBuffer];
+    var exit =false ;
+    var src2: Int = 0;
+    while(exit == false){
+
+      src2 = rand.nextInt(conf.getInt(dataSetName+".maxRandomID"));
+      if(src1FrdList.contains(src2) == false){
+
+        val collTest = db("train");
+        val query = MongoDBObject("_id" -> k.toInt)
+        val cursor = collTest.find(query);
+
+        if(cursor.hasNext){
+          val kv2 = cursor.next();
+          
+          val k2 = kv2.toList(1)._1;
+          val v2 = kv2.as[MongoDBList](k2).toList; 
+          val src1FrdListInTrain = v.collect(aFunction).to[ArrayBuffer];
+          if(src1FrdListInTrain.contains(src2) == false) exit = true;
+        }
+
+      }
+    }
+    (k.toInt, src2)
+  }
+
+
+
+  /*
    * get two source nodes from MongoDB.
    */
   def genFrdsMapFromDB(dataSetName: String) = {
@@ -183,5 +238,36 @@ object Util {
     // }
     frdsMap
   }
-  
+
+
+  def findNumMutualFrds(src1: Int, src2: Int, frdsMapGlobal: scala.collection.mutable.Map[Int, ArrayBuffer[Int]]) = {
+    var ret = 1;
+    if(frdsMapGlobal.contains(src1) == false || frdsMapGlobal(src1) == null) ret = -1;
+    if(frdsMapGlobal.contains(src2) == false || frdsMapGlobal(src2) == null) ret = -1;
+    if(ret == -1) -1
+    else{
+      val frds1 = frdsMapGlobal(src1);
+      val frds2 = frdsMapGlobal(src2);
+      frds1.toSet.intersect(frds2.toSet).size
+    }
+  }
+
+  def findNumMutualComms(src1: Int, src2: Int, commsMap: scala.collection.mutable.Map[Int, ArrayBuffer[Int]]): Int = {
+    var ret = 1;
+    if(commsMap.contains(src1) == false || commsMap(src1) == null) ret = 0;
+    if(commsMap.contains(src2) == false || commsMap(src2) == null) ret = 0;
+    if( ret == 0) 0
+    else{
+      val comm1 = commsMap(src1);
+      val comm2 = commsMap(src2);
+      // println(comm1 + " " + comm2)
+      comm1.toSet.intersect(comm2.toSet).size
+    }
+  }
+
+  def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+    val p = new java.io.PrintWriter(f)
+    try { op(p) } finally { p.close() }
+  }
+
 }
