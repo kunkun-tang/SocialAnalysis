@@ -140,8 +140,8 @@ object DBLPTruePositive extends App{
     val numMutualActualComm = findNumMutualComms(src1, src2, commsMap);
 
     if(numMutualActualFrds >= 0){
-      val localGraph = RWM.apply(frdsMapLocal, backBone)(src1)
-      val localGraph2 = RWM.apply(frdsMapLocal, backBone)(src2)
+      val localGraph = PageRankWalk.apply(frdsMapLocal, backBone)(src1)
+      val localGraph2 = PageRankWalk.apply(frdsMapLocal, backBone)(src2)
       val fiveSet = localGraph ++ localGraph2  ++ backBone
 
       /*
