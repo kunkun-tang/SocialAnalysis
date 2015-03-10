@@ -169,9 +169,9 @@ object MCSAT {
     testFrd1 = -1; testFrd2 = -1;
     println("If the the two people know each other = " + counter.toFloat/conf.getInt("MCSATSampleNum"))
     val numMutualFrds = findNumMutualFrdsLocal(src1, src2);
-    if(numMutualFrds == 0)
-      (counter.toFloat/conf.getInt("MCSATSampleNum"), 0.0);
-    else 
+    // if(numMutualFrds == 0)
+    //   (counter.toFloat/conf.getInt("MCSATSampleNum"), 0.0);
+    // else 
       (counter.toFloat/conf.getInt("MCSATSampleNum"), probCommonFrd(numMutualFrds));
   }
 
