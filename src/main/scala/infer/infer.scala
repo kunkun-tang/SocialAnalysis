@@ -111,17 +111,23 @@ object MCSAT {
 
       for((k,v) <- frdsRelation){
         val num = findNumMutualFrdsLocal(k._1, k._2);
-        // if(num > 3 && k._1 == src1 && k._2 == src2 && first == true){
+        // if(k._1 == src1 && k._2 == src2 && first == true){
         //   testFrd1 = k._1; testFrd2 = k._2; first = false;
         // }
         val probFromFrdCurve = probCommonFrd(num);
         // if(k._1 == testFrd1 && k._2 == testFrd2){
-        //   println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num))
+        //   println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num) + " probFromFrdCurve=" + probFromFrdCurve)
         // }
-        if (v._1 == true && v._2==true && num > 0 && rand.nextDouble() < computeWeightFrd(num)) {
+        if (v._1 == true && num >= 0 && rand.nextDouble() < computeWeightFrd(num)) {
+
           // println("num =" + num + " access");
           if( (probFromFrdCurve >= 0.5 && v._2 == true) || 
               (probFromFrdCurve < 0.5 && v._2 == false) ){
+            
+            // if(k._1 == testFrd1 && k._2 == testFrd2){
+
+            //   println("enter constrint set");
+            // }
             val pred1 = MutualFrd(num, k._1, k._2);
             pred1.result = true;
             val pred2 = new FrdPredict(k._1, k._2, frdsRelation);
