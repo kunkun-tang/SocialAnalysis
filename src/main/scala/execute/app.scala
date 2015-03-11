@@ -125,8 +125,8 @@ object DBLPTruePositive extends App{
   // val (frdsPair, commsPair) = Util.sampleUniformQueryNodes(2, frdsMap, commsMap);
 
   // resultMap collects every source node pair, [(src1, src2), (probability, Baseline, numMutualFrds, numMutualComm)]
-  val resultMap = scala.collection.mutable.HashMap[(Int, Int), (Double, Double, Int, Int)]();
-  var count =0; var additionProbSAT = 0.0; var additionProbBaseline=0.0;
+  val resultMap = scala.collection.mutable.HashMap[(Int, Int), (Double, Double, Int, Int, Int)]();
+  var count =0; var additionProbSAT = 0.0; var additionProbBaseline=0.0; var filterCount = 0;
   for(i <- 1 to conf.getInt("SampleLIMIT")){
     val frdsMapLocal = frdsMap.clone();
     var (src1, src2) = Util.genTwoKnownSrcFromDB(datasetName);
@@ -151,18 +151,20 @@ object DBLPTruePositive extends App{
       println("fiveSet size = " + inferFrdsMap.size)
 
       val (probSAT, probBaseline) = MCSAT(inferFrdsMap, commsMap)(src1, src2)
-
+      if(probSAT > 0.20) filterCount+=1;
       println(" actual num mutual frds = " + numMutualActualFrds);
-      resultMap += (src1, src2)->(probSAT, probBaseline, numMutualActualFrds, numMutualActualComm);
+      resultMap += (src1, src2)->(probSAT, probBaseline, numMutualActualFrds, numMutualActualComm, inferFrdsMap.size);
       count += 1;
       additionProbBaseline += (1-probBaseline)*(1-probBaseline);
       additionProbSAT += (1-probSAT)*(1-probSAT);
     }
   }
 
+  println("The ratio with filter eaqual to 0.20 ="+filterCount.toFloat/count)
+
   printToFile(new java.io.File("result.txt"))(p => {
     resultMap.foreach(res => p.println( "src1 and src2 = " + res._1._1 + "\t"+ res._1._2 + "\t" + " probSAT =" +  res._2._1
-    +"\t" + " probBaseline =" +  res._2._2 + "\t"  + " mutual Frd num=" + res._2._3 +  "\t" + " mutual Comm num=" + res._2._4))
+    +"\t" + " probBaseline =" +  res._2._2 + "\t"  + " mutual Frd num=" + res._2._3 +  "\t" + " mutual Comm num=" + res._2._4 + " fiveSet size=" + res._2._5))
     p.println("additionProbBaseline sqrt = " + scala.math.sqrt(additionProbBaseline/count) )
     p.println("additionProbSAT sqrt = " + scala.math.sqrt(additionProbSAT/count) )
   
