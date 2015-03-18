@@ -160,7 +160,7 @@ object DBLPTruePositive extends App{
     }
   }
 
-  println("The ratio with filter eaqual to 0.20 ="+filterCount.toFloat/count)
+  println("The ratio with filter eaqual to 0.20  ="+filterCount.toFloat/count)
 
   printToFile(new java.io.File("result.txt"))(p => {
     resultMap.foreach(res => p.println( "src1 and src2 = " + res._1._1 + "\t"+ res._1._2 + "\t" + " probSAT =" +  res._2._1
