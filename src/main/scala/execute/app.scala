@@ -153,6 +153,7 @@ object DBLPTruePositive extends App{
       val (probSAT, probBaseline) = MCSAT(inferFrdsMap, commsMap)(src1, src2)
       if(probSAT > 0.20) filterCount+=1;
       println(" actual num mutual frds = " + numMutualActualFrds);
+      println(" actual num mutual Comm = " + numMutualActualComm);
       resultMap += (src1, src2)->(probSAT, probBaseline, numMutualActualFrds, numMutualActualComm, inferFrdsMap.size);
       count += 1;
       additionProbBaseline += (1-probBaseline)*(1-probBaseline);
