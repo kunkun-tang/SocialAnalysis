@@ -27,19 +27,19 @@ object SelectUtilKnown {
   	frdsMap = Util.genFrdsMapFromDB(datasetName)
 
 	  val commBigDegreeUsers = commsMap.toList.filter{ case (k,v)=> if(v== null) false
-	  	else v.length > 10}.map(_._1)
+	  	else v.length > 2}.map(_._1)
 
 	  println(commBigDegreeUsers.size)
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
 	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.2 && Util.findNumMutualFrds(user1, user2, frdsMap) > 2 && knowEachOther(user1, user2, frdsMap) ==true)
+	  	if (rand.nextDouble()<0.02 && Util.findNumMutualFrds(user1, user2, frdsMap) > 2 && knowEachOther(user1, user2, frdsMap) ==true)
 	  )yield(user1, user2)
 
 	  println("complete")
 
-	  printToFile(new java.io.File("selectKnown.txt"))(p => {
+	  printToFile(new java.io.File("selectKnown_2_2.txt"))(p => {
 	    result.foreach(res => p.println(res._1 + " " + res._2))
 	  })
 	}
