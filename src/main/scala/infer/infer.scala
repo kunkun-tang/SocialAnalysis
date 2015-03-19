@@ -118,14 +118,14 @@ object MCSAT {
         val numComm = findNumMutualComms(k._1, k._2);
         val probFromFrdCurve = probCommonFrd(num);
         val probFromCommCurve = probCommonComm(numComm);
-        if(k._1 == src1 && k._2 == src2 && first == true){
-          testFrd1 = k._1; testFrd2 = k._2; first = false;
-        }
-        if(k._1 == testFrd1 && k._2 == testFrd2){
-          println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num) 
-            + " probFromFrdCurve=" + probFromFrdCurve + " computeWeightComm(numComm) =" + computeWeightComm(numComm) 
-            + " probFromCommCurve ="+ probFromCommCurve)
-        }
+        // if(k._1 == src1 && k._2 == src2 && first == true){
+        //   testFrd1 = k._1; testFrd2 = k._2; first = false;
+        // }
+        // if(k._1 == testFrd1 && k._2 == testFrd2){
+        //   println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num) 
+        //     + " probFromFrdCurve=" + probFromFrdCurve + " computeWeightComm(numComm) =" + computeWeightComm(numComm) 
+        //     + " probFromCommCurve ="+ probFromCommCurve)
+        // }
 
         if (v._1 == true && num >= 0 && 
         	rand.nextDouble() < Math.max(computeWeightFrd(num), computeWeightComm(numComm))) {
@@ -137,10 +137,10 @@ object MCSAT {
 							(probFromCommCurve < 0.5 && v._2 == false)
             ){
             
-            if(k._1 == testFrd1 && k._2 == testFrd2){
+            // if(k._1 == testFrd1 && k._2 == testFrd2){
 
-              println("enter constrint set");
-            }
+            //   println("enter constrint set");
+            // }
             val pred1 = MutualFrd(num, k._1, k._2);
             pred1.result = true;
             val pred2 = MutualComm(num, k._1, k._2);
@@ -181,8 +181,8 @@ object MCSAT {
   	// assign randome values to all uncertain nodes
     assignBin(frdsRelation);
 
-    if(testFrd1 != -1)
-      println("in walkSAT the value=" + frdsRelation((testFrd1, testFrd2)) );
+    // if(testFrd1 != -1)
+    //   println("in walkSAT the value=" + frdsRelation((testFrd1, testFrd2)) );
     /*
      * Use frdsMapLocal to try solving salkSAT problem.
      * For current information in clausesArr, we update the situations in clausesArr.
@@ -216,9 +216,9 @@ object MCSAT {
 
 		val (src1, src2) = (frdPredict.getSrc1, frdPredict.getSrc2);
 
-    if(src1 == testFrd1 && src2 == testFrd2){
-      println("ifknow = " + frdPredict.ifKnow);
-    }
+    // if(src1 == testFrd1 && src2 == testFrd2){
+    //   println("ifknow = " + frdPredict.ifKnow);
+    // }
 
 		if(frdPredict.ifKnow == true){
 			frdPredict.setResult(false);
