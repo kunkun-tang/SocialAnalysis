@@ -110,19 +110,32 @@ object MCSAT {
       val allLength = frdsMapLocal.foldLeft(0)( (B, kv) => B + kv._2.length);
 
       for((k,v) <- frdsRelation){
+      	/*
+      	 * num is the mutual frd num between k1 and k2.
+      	 * numComm is the mutual Community between k1 and k2.
+      	 */
         val num = findNumMutualFrdsLocal(k._1, k._2);
+        val numComm = findNumMutualComms(k._1, k._2);
+        val probFromFrdCurve = probCommonFrd(num);
+        val probFromCommCurve = probCommonComm(numComm);
         // if(k._1 == src1 && k._2 == src2 && first == true){
         //   testFrd1 = k._1; testFrd2 = k._2; first = false;
         // }
-        val probFromFrdCurve = probCommonFrd(num);
         // if(k._1 == testFrd1 && k._2 == testFrd2){
-        //   println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num) + " probFromFrdCurve=" + probFromFrdCurve)
+        //   println("numComm=" + findNumMutualComms(k._1, k._2) + " numFrd=" + num + " boolean=" + v._2 + " weight="+computeWeightFrd(num) 
+        //     + " probFromFrdCurve=" + probFromFrdCurve + " computeWeightComm(numComm) =" + computeWeightComm(numComm) 
+        //     + " probFromCommCurve ="+ probFromCommCurve)
         // }
-        if (v._1 == true && num >= 0 && rand.nextDouble() < computeWeightFrd(num)) {
+
+        if (v._1 == true && num >= 0 && 
+        	rand.nextDouble() < Math.max(computeWeightFrd(num), computeWeightComm(numComm))) {
 
           // println("num =" + num + " access");
           if( (probFromFrdCurve >= 0.5 && v._2 == true) || 
-              (probFromFrdCurve < 0.5 && v._2 == false) ){
+              (probFromFrdCurve < 0.5 && v._2 == false) ||
+							(probFromCommCurve >= 0.5 && v._2 == true) ||
+							(probFromCommCurve < 0.5 && v._2 == false)
+            ){
             
             // if(k._1 == testFrd1 && k._2 == testFrd2){
 
@@ -130,35 +143,18 @@ object MCSAT {
             // }
             val pred1 = MutualFrd(num, k._1, k._2);
             pred1.result = true;
-            val pred2 = new FrdPredict(k._1, k._2, frdsRelation);
-            pred2.result = v._2;
+            val pred2 = MutualComm(num, k._1, k._2);
+            pred2.result = true;
+            val pred3 = new FrdPredict(k._1, k._2, frdsRelation);
+            pred3.result = v._2;
+
             // println("mutualFrds: " + num + "  " + computeWeightFrd(num) + " probFromFrdCurve = " + probFromFrdCurve);
-            val aClause = new FrdClause(pred1, pred2, num);
+            val aClause = new HybridClause(pred1, pred2, pred3, num, numComm);
             clausesArr.append(aClause);
-            clausesMap += (k._1, k._2) -> (aClause, null)
+            // clausesMap += (k._1, k._2) -> (aClause, null)
           }
         }
 
-        // val numComm = findNumMutualComms(k._1, k._2);
-        // val probFromCommCurve = probCommonComm(numComm);
-        // if (v._1 == true && num > 0 && rand.nextDouble() < computeWeightComm(numComm)) {
-        //   if( (probFromCommCurve >= 0.5 && v._2 == true) || 
-        //       (probFromCommCurve < 0.5 && v._2 == false) ){
-
-        //     val pred1 = MutualComm(numComm, k._1, k._2);
-        //     pred1.result = true;
-        //     val pred2 = new FrdPredict(k._1, k._2, frdsRelation);
-        //     pred2.result = v._2;
-        //     val aClause = new CommClause(pred1, pred2, num);
-        //     clausesArr.append(aClause);
-        //     if(clausesMap.contains( (k._1, k._2) ) == false) 
-        //       clausesMap += (k._1, k._2) -> (null, aClause)
-        //     else{
-        //       val (v1, v2) = clausesMap( (k._1, k._2) );
-        //       clausesMap += (k._1, k._2) -> (v1, aClause);
-        //     }
-        //   }
-        // }
       }
 
       /*

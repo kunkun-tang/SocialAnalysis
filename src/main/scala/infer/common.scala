@@ -26,10 +26,19 @@ package object infer {
 
   val lnOf2 = math.log(2)
 
-  def ProbDBLPCommonFrd(numMutualFrd: Int) = if (numMutualFrd >0 )0.3545 * math.log(numMutualFrd) + 0.0279 else 0.000004
-  def ProbLJCommonFrd(numMutualFrd: Int) = if (numMutualFrd >0 ) 0.0084 * math.pow(numMutualFrd, 1.0222) else 0.000004
+  def ProbDBLPCommonFrd(numMutualFrd: Int) = if (numMutualFrd >0 ){
+    val ret = 0.3545 * math.log(numMutualFrd) + 0.0279;
+    if(ret >= 1.0) 1.0 else ret;
+  }
+  else 0.000004
+  
+  def ProbLJCommonFrd(numMutualFrd: Int): Double = if (numMutualFrd >0 ) {
+    val ret: Double = 0.0084 * math.pow(numMutualFrd, 1.0222) 
+    if(ret >= 1.0) 1.0 else ret;
+  }
+  else 0.000004
 
-  def ProbDBLPCommonComm(numMutualComm: Int) = 0.0012 * math.pow(numMutualComm, 1.766)
+  def ProbDBLPCommonComm(numMutualComm: Int) = 0.012 * math.pow(numMutualComm, 1.766)
   def ProbLJCommonComm(numMutualComm: Int) = 0.0061 * math.pow(numMutualComm, 1.1498)
 
   import com.typesafe.config.ConfigFactory
@@ -80,6 +89,26 @@ package object infer {
     def getN = n
     def getPred2 = pred2
   }
+
+  /*
+   * pred1 will be the mutualFrd, and pred2 is will be mutualComm
+   */
+  class HybridClause( pred1: Predicate, pred2: Predicate, pred3: FrdPredict, var nFrd: Int, var nComm: Int) extends Clause{
+
+    def result: Boolean = {
+      if(probCommonFrd(nFrd) < 0.5 && probCommonComm(nComm) < 0.5){
+        if (pred3.ifKnow == false) true else false
+      }
+      else{
+        if (pred3.ifKnow == true) true else false
+      }
+    }
+
+    def setN(changeN: Int) = nFrd = changeN
+    def getN = nFrd
+    def getPred2 = pred3
+  }
+
 
   /*
    * if the prob is larger than 0.5, the weight has to be inverse computed.
