@@ -21,20 +21,21 @@ object SelectUtilKnown {
   val db = mongoClient(datasetName+ "Split")
   val collTest = db("test");
 
+  val filterDegree = conf.getInt("DBLP.filterTestDegree");
 	def main(args: Array[String])={
 
 	  var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
   	frdsMap = Util.genFrdsMapFromDB(datasetName)
 
 	  val commBigDegreeUsers = commsMap.toList.filter{ case (k,v)=> if(v== null) false
-	  	else v.length > 3}.map(_._1)
+	  	else v.length > filterDegree}.map(_._1)
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
 	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.7 
-	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
-	  		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  	if (rand.nextDouble()<0.007
+	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > filterDegree 
+	  		&& Util.findNumMutualComms(user1, user2, commsMap) > filterDegree 
 	  		&& knowEachOther(user1, user2, frdsMap) ==true)
 	  )yield(user1, user2)
 
@@ -47,7 +48,7 @@ object SelectUtilKnown {
 
 	  println("complete")
 
-	  printToFile(new java.io.File("selectKnown_1_1.txt"))(p => {
+	  printToFile(new java.io.File("selectKnown_" + filterDegree + "_" + filterDegree + ".txt"))(p => {
 	    result.foreach(res => p.println(res._1 + " " + res._2))
 	  })
 	}
@@ -91,6 +92,7 @@ object SelectUtilStranger {
   val conf = ConfigFactory.load
   val datasetName = conf.getString("DataSetName");
   val rand = new Random(System.currentTimeMillis())
+  val filterDegree = conf.getInt("DBLP.filterTestDegree");
 
 	def main(args: Array[String])={
 
@@ -98,31 +100,31 @@ object SelectUtilStranger {
   	frdsMap = Util.genFrdsMapFromDB(datasetName)
 
 	  val commBigDegreeUsers = commsMap.toList.filter{ case (k,v)=> if(v== null) false
-	  	else v.length > 3}.map(_._1)
+	  	else v.length > filterDegree}.map(_._1)
 
 	  println(commBigDegreeUsers.size)
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
 	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.7 
-	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
-	  		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  	if (rand.nextDouble()<0.005
+	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > filterDegree 
+	  		&& Util.findNumMutualComms(user1, user2, commsMap) > filterDegree 
 	  		&& knowEachOther(user1, user2, frdsMap) ==false)
 	  )yield(user1, user2)
 
-	  val result = for(
-	  	user1 <- commBigDegreeUsers;
-	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.7 
-	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
-	  		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
-	  		&& knowEachOther(user1, user2, frdsMap) ==false)
-	  )println(user1 + " " + user2)
+	  // val result = for(
+	  // 	user1 <- commBigDegreeUsers;
+	  // 	user2 <- commBigDegreeUsers if(user1 != user2)
+	  // 	if (rand.nextDouble()<0.7 
+	  // 		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
+	  // 		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  // 		&& knowEachOther(user1, user2, frdsMap) ==false)
+	  // )println(user1 + " " + user2)
 
 	  println("complete")
 
-	  printToFile(new java.io.File("selectStranger.txt"))(p => {
+	  printToFile(new java.io.File("selectStranger_" + filterDegree + "_" + filterDegree + ".txt"))(p => {
 	    result.foreach(res => p.println(res._1 + " " + res._2))
 	  })
 	}
