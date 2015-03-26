@@ -27,19 +27,27 @@ object SelectUtilKnown {
   	frdsMap = Util.genFrdsMapFromDB(datasetName)
 
 	  val commBigDegreeUsers = commsMap.toList.filter{ case (k,v)=> if(v== null) false
-	  	else v.length > 2}.map(_._1)
-
-	  println(commBigDegreeUsers.size)
+	  	else v.length > 3}.map(_._1)
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
 	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.02 && Util.findNumMutualFrds(user1, user2, frdsMap) > 2 && knowEachOther(user1, user2, frdsMap) ==true)
+	  	if (rand.nextDouble()<0.7 
+	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
+	  		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  		&& knowEachOther(user1, user2, frdsMap) ==true)
 	  )yield(user1, user2)
+
+	  // val result = for(
+	  // 	user1 <- commBigDegreeUsers;
+	  // 	user2 <- commBigDegreeUsers if(user1 != user2)
+	  // 	if (rand.nextDouble()<0.7 && Util.findNumMutualFrds(user1, user2, frdsMap) > 3 && Util.findNumMutualComms(user1, user2, commsMap) > 3 && knowEachOther(user1, user2, frdsMap) ==true)
+	  // )println( Util.findNumMutualFrds(user1, user2, frdsMap) + " " + Util.findNumMutualComms(user1, user2, commsMap) )
+
 
 	  println("complete")
 
-	  printToFile(new java.io.File("selectKnown_2_2.txt"))(p => {
+	  printToFile(new java.io.File("selectKnown_1_1.txt"))(p => {
 	    result.foreach(res => p.println(res._1 + " " + res._2))
 	  })
 	}
@@ -90,15 +98,27 @@ object SelectUtilStranger {
   	frdsMap = Util.genFrdsMapFromDB(datasetName)
 
 	  val commBigDegreeUsers = commsMap.toList.filter{ case (k,v)=> if(v== null) false
-	  	else v.length > 2}.map(_._1)
+	  	else v.length > 3}.map(_._1)
 
 	  println(commBigDegreeUsers.size)
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
 	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.05 && Util.findNumMutualFrds(user1, user2, frdsMap) > 2 && knowEachOther(user1, user2, frdsMap) ==false)
+	  	if (rand.nextDouble()<0.7 
+	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
+	  		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  		&& knowEachOther(user1, user2, frdsMap) ==false)
 	  )yield(user1, user2)
+
+	  val result = for(
+	  	user1 <- commBigDegreeUsers;
+	  	user2 <- commBigDegreeUsers if(user1 != user2)
+	  	if (rand.nextDouble()<0.7 
+	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
+	  		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  		&& knowEachOther(user1, user2, frdsMap) ==false)
+	  )println(user1 + " " + user2)
 
 	  println("complete")
 
