@@ -32,8 +32,8 @@ object SelectUtilKnown {
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
-	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.007
+	  	user2 <- commBigDegreeUsers if(user1 < user2)
+	  	if (rand.nextDouble()<0.02
 	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > filterDegree 
 	  		&& Util.findNumMutualComms(user1, user2, commsMap) > filterDegree 
 	  		&& knowEachOther(user1, user2, frdsMap) ==true)
@@ -106,21 +106,21 @@ object SelectUtilStranger {
 
 	  val result = for(
 	  	user1 <- commBigDegreeUsers;
-	  	user2 <- commBigDegreeUsers if(user1 != user2)
-	  	if (rand.nextDouble()<0.005
+	  	user2 <- commBigDegreeUsers if(user1 < user2)
+	  	if (rand.nextDouble()<0.00002
 	  		&& Util.findNumMutualFrds(user1, user2, frdsMap) > filterDegree 
 	  		&& Util.findNumMutualComms(user1, user2, commsMap) > filterDegree 
 	  		&& knowEachOther(user1, user2, frdsMap) ==false)
 	  )yield(user1, user2)
 
-	  // val result = for(
+	  // for(
 	  // 	user1 <- commBigDegreeUsers;
 	  // 	user2 <- commBigDegreeUsers if(user1 != user2)
-	  // 	if (rand.nextDouble()<0.7 
-	  // 		&& Util.findNumMutualFrds(user1, user2, frdsMap) > 3 
-	  // 		&& Util.findNumMutualComms(user1, user2, commsMap) > 3 
+	  // 	if (rand.nextDouble()<0.01 
+	  // 		&& Util.findNumMutualFrds(user1, user2, frdsMap) > filterDegree 
+	  // 		&& Util.findNumMutualComms(user1, user2, commsMap) > filterDegree 
 	  // 		&& knowEachOther(user1, user2, frdsMap) ==false)
-	  // )println(user1 + " " + user2)
+	  // )println(user1 + " " + user2 + " " + Util.findNumMutualFrds(user1, user2, frdsMap) + " " + Util.findNumMutualComms(user1, user2, commsMap))
 
 	  println("complete")
 

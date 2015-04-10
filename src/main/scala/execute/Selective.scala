@@ -15,7 +15,7 @@ object DBLPTruePositiveSelective extends App{
   var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
   val rand = new Random(System.currentTimeMillis())
 
-  val testData = SelectUtilKnown.readSelectFile("selectKnown_2_2.txt");
+  val testData = SelectUtilKnown.readSelectFile("selectKnown_4_4.txt");
   frdsMap = Util.genFrdsMapFromDB(datasetName)
 
   def getTwoPerson()={
@@ -92,7 +92,7 @@ object DBLPFalsePositiveSelective extends App{
   var (frdsMap, commsMap, backBone) = PreMain.applyDB(datasetName)
   val rand = new Random(System.currentTimeMillis())
 
-  val testData = SelectUtilKnown.readSelectFile("selectStranger_2_2.txt");
+  val testData = SelectUtilKnown.readSelectFile("selectStranger_1_1.txt");
   frdsMap = Util.genFrdsMapFromDB(datasetName)
 
   def getTwoPerson()={
@@ -141,14 +141,14 @@ object DBLPFalsePositiveSelective extends App{
       println(" actual num mutual Comm = " + numMutualActualComm);
       resultMap += (src1, src2)->(probSAT, probBaseline, numMutualActualFrds, numMutualActualComm, inferFrdsMap.size);
       count += 1;
-      additionProbBaseline += (1-probBaseline)*(1-probBaseline);
-      additionProbSAT += (1-probSAT)*(1-probSAT);
+      additionProbBaseline += (0-probBaseline)*(0-probBaseline);
+      additionProbSAT += (0-probSAT)*(0-probSAT);
     }
   }
 
   println("The ratio with filter eaqual to 0.20  ="+filterCount.toFloat/count)
 
-  printToFile(new java.io.File("result_2_2_False.txt"))(p => {
+  printToFile(new java.io.File("result_3_3_False.txt"))(p => {
     resultMap.foreach(res => p.println( "src1 and src2 = " + res._1._1 + "\t"+ res._1._2 + "\t" + " probSAT =" +  res._2._1
     +"\t" + " probBaseline =" +  res._2._2 + "\t"  + " mutual Frd num=" + res._2._3 +  "\t" + " mutual Comm num=" + res._2._4 + " fiveSet size=" + res._2._5))
     p.println("additionProbBaseline sqrt = " + scala.math.sqrt(additionProbBaseline/count) )

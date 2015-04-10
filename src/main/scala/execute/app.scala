@@ -204,7 +204,7 @@ object DBLPFalsePositive extends App{
     val numMutualActualFrds = findNumMutualFrds(src1, src2, frdsMapLocal);
     val numMutualActualComm = findNumMutualComms(src1, src2, commsMap);
 
-    if(numMutualActualFrds >= 0){
+    if(numMutualActualFrds >= 1){
       val localGraph = RWM.apply(frdsMapLocal, backBone)(src1)
       val localGraph2 = RWM.apply(frdsMapLocal, backBone)(src2)
       val fiveSet = localGraph ++ localGraph2  ++ backBone

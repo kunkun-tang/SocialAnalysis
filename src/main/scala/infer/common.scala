@@ -71,7 +71,7 @@ package object infer {
 
   class FrdClause(pred1: Predicate, pred2: FrdPredict, var n: Int) extends Clause{
     
-    def result: Boolean = if(probCommonFrd(n) < 0.5){
+    def result: Boolean = if(probCommonFrd(n)-0.5 < 0.5){
       if (pred1.result == true && pred2.ifKnow == true) false else true
     }
     else{
@@ -103,7 +103,7 @@ package object infer {
   class HybridClause( pred1: Predicate, pred2: Predicate, pred3: FrdPredict, var nFrd: Int, var nComm: Int) extends Clause{
 
     def result: Boolean = {
-      if(probCommonFrd(nFrd) < 0.5 && probCommonComm(nComm) < 0.5){
+      if(probCommonFrd(nFrd) < 0.5 && probCommonComm(nComm)< 0.5){
         if (pred3.ifKnow == false) true else false
       }
       else{
